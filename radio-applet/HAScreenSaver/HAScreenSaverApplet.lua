@@ -268,7 +268,7 @@ function _fetchFromServer(self)
 
     local playerId = player:getId()
     pcall(function()
-        server:userRequest(
+        server:request(
             function(chunk, err)
                 if not self.window or not self.state then
                     return
