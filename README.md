@@ -100,12 +100,13 @@ You can also pick a per-radio **Clock Font** override or reset all custom overri
 
 ### Step 3: Install the Applet on Your Squeezebox Radio
 
-1. On your Squeezebox Radio / UE Smart Radio, open **Settings → Advanced → Applet Installer**.
-2. Uncheck **Recommended Applets Only**.
-3. Select **Home Assistant Clock** → **Install** (the radio downloads the `.zip`, verifies its SHA-1, installs, and restarts).
-4. Enable it under **Settings → Screen → Screensavers** (*When Off*, *When Stopped*, and/or *When Playing*).
+Once the LMS plugin is enabled, it automatically advertises **Home Assistant Clock** to all connected Squeezebox Radios over plain local HTTP (no extra repository URL or HTTPS required):
 
-*(Tip: The LMS plugin also self-hosts a local LAN repository at `http://<YOUR_LMS_HOST>:9000/plugins/HAScreenSaver/repo.xml` for completely offline LAN distribution.)*
+1. On your Squeezebox Radio / UE Smart Radio, open **Settings → Advanced → Applet Installer**.
+2. Select **Home Assistant Clock** → **Install** (the radio downloads the `.zip` directly from your local LMS server over plain HTTP, verifies its SHA-1, installs, and restarts).
+3. Enable it under **Settings → Screen → Screensavers** (*When Off*, *When Stopped*, and/or *When Playing*).
+
+*(Tip: The LMS plugin also self-hosts a standalone XML manifest at `http://<YOUR_LMS_HOST>:9000/plugins/HAScreenSaver/repo.xml` if you ever need to inspect it manually.)*
 
 ---
 

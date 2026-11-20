@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-VERSION="${1:-1.1.0}"
+VERSION="${1:-1.2.0}"
 GITHUB_REPO="${2:-Nornode/lms-ha-screensaver}"
 TAG="v${VERSION}"
 DIST_DIR="$ROOT_DIR/dist"
@@ -30,6 +30,11 @@ rm -f "$PLUGIN_ZIP"
 PLUGIN_SHA1="$(shasum -a 1 "$PLUGIN_ZIP" | awk '{print $1}')"
 
 echo "==> 4. Generating root repo.xml for ${GITHUB_REPO} (${TAG})..."
+# Note: The radio applet is intentionally NOT listed here with an https:// GitHub URL,
+# because Squeezebox Radio's SetupAppletInstaller uses plain-HTTP SocketHttp (no TLS).
+# Instead, the LMS plugin bundles AppletDist/HAScreenSaver.zip and registers a native
+# Slim::Control::Jive extension provider so radios download the applet over plain HTTP
+# directly from their local LMS server via relurl="/plugins/HAScreenSaver/HAScreenSaver.zip".
 cat > "$ROOT_DIR/repo.xml" <<XML
 <?xml version="1.0" encoding="UTF-8"?>
 <extensions>
@@ -39,7 +44,7 @@ cat > "$ROOT_DIR/repo.xml" <<XML
   <plugins>
     <plugin name="HAScreenSaver" version="${VERSION}" minTarget="8.0" maxTarget="*" icon="https://raw.githubusercontent.com/${GITHUB_REPO}/main/server-plugin/HAScreenSaver/HTML/EN/plugins/HAScreenSaver/html/images/icon.png">
       <title lang="EN">Home Assistant Screensaver</title>
-      <desc lang="EN">Stateless live proxy serving Home Assistant sensor states, weather condition, door/alert status, and radio alarm status to the Home Assistant Clock screensaver applet on Squeezebox Radio / UE Smart Radio, with zero long-term caching.</desc>
+      <desc lang="EN">Stateless live proxy serving Home Assistant sensor states, weather condition, door/alert status, and radio alarm status to the Home Assistant Clock screensaver applet on Squeezebox Radio / UE Smart Radio, with zero long-term caching. Automatically serves the radio applet over plain local HTTP to Applet Installer.</desc>
       <url>https://github.com/${GITHUB_REPO}/releases/download/${TAG}/HAScreenSaver-plugin-${TAG}.zip</url>
       <sha>${PLUGIN_SHA1}</sha>
       <creator>Nornode</creator>
@@ -47,20 +52,6 @@ cat > "$ROOT_DIR/repo.xml" <<XML
       <category>misc</category>
     </plugin>
   </plugins>
-  <applets>
-    <applet name="HAScreenSaver"
-            creator="Nornode"
-            link="https://github.com/${GITHUB_REPO}"
-            minTarget="7.7"
-            maxTarget="*"
-            target="baby|fab4|jive|squeezeplay"
-            version="${VERSION}"
-            url="https://github.com/${GITHUB_REPO}/releases/download/${TAG}/HAScreenSaver-applet-${TAG}.zip"
-            sha="${APPLET_SHA1}">
-      <title lang="EN">Home Assistant Clock</title>
-      <desc lang="EN">Dark-shaded digital clock screensaver for Squeezebox Radio with bottom-center weather icon, up to 4 live Home Assistant sensors, subtle radio alarm indicator, and optional door/alert banner. Zero long-term caching.</desc>
-    </applet>
-  </applets>
 </extensions>
 XML
 

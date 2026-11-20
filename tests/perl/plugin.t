@@ -156,6 +156,28 @@ BEGIN {
         sub addRawFunction  { shift; push @PAGE_ROUTES, [@_]; }
     }
 
+    # Stub Slim::Control::Jive
+    $INC{'Slim/Control/Jive.pm'} = 1;
+    {
+        package Slim::Control::Jive;
+        our %EXTENSION_PROVIDERS;
+        sub registerExtensionProvider {
+            my ($name, $cb, $optstr) = @_;
+            $EXTENSION_PROVIDERS{$name} = { provider => $cb, optstr => $optstr };
+        }
+        sub removeExtensionProvider {
+            my ($name) = @_;
+            delete $EXTENSION_PROVIDERS{$name};
+        }
+    }
+
+    # Stub Slim::Utils::Network
+    $INC{'Slim/Utils/Network.pm'} = 1;
+    {
+        package Slim::Utils::Network;
+        sub serverURL { return 'http://192.0.2.10:9000'; }
+    }
+
     # Stub Slim::Networking::SimpleAsyncHTTP (captures calls + checks cache => 0)
     $INC{'Slim/Networking/SimpleAsyncHTTP.pm'} = 1;
     {
@@ -641,6 +663,75 @@ is(Plugins::HAScreenSaver::Plugin::formatWeatherIcon({ state => 'unknown' }),   
     is($params->{players}[0]{has_overrides}, 1, 'Bedroom marked has_overrides=1');
     is($params->{players}[2]{name}, 'Kitchen', 'Kitchen sorted last');
     is($params->{players}[2]{summary}, 'Using Global Defaults', 'Kitchen summary reports Using Global Defaults');
+}
+
+# 11. Test Jive extension provider (plain HTTP Applet Installer delivery)
+{
+    Plugins::HAScreenSaver::Plugin->initPlugin();
+
+    ok(exists $Slim::Control::Jive::EXTENSION_PROVIDERS{hascreensaver},
+        'initPlugin registers hascreensaver Jive extension provider');
+    ok(!defined $Slim::Control::Jive::EXTENSION_PROVIDERS{hascreensaver}{optstr},
+        'Jive extension provider has undef optstr so it appears even with Recommended Applets Only');
+
+    # Ensure AppletDist/HAScreenSaver.zip exists or create a temporary stub if absent in clean CI checkout
+    my $zipPath = Plugins::HAScreenSaver::Plugin::_appletZipPath();
+    my $createdTempZip = 0;
+    if (!-r $zipPath) {
+        require File::Basename;
+        require File::Path;
+        File::Path::make_path(File::Basename::dirname($zipPath));
+        open my $fh, '>:raw', $zipPath or die "Cannot write temp zip: $!";
+        print $fh "PK\x03\x04dummy-applet-zip-for-unit-test";
+        close $fh;
+        $createdTempZip = 1;
+    }
+
+    my ($cbReq, $cbRes);
+    Plugins::HAScreenSaver::Plugin::getJiveExtensions({
+        type   => 'applet',
+        target => 'baby',
+        cb     => sub { ($cbReq, $cbRes) = @_; },
+        pt     => ['REQ_TOKEN'],
+    });
+
+    is($cbReq, 'REQ_TOKEN', 'getJiveExtensions forwards passthrough args to callback');
+    is(scalar(@$cbRes), 1, 'getJiveExtensions returns 1 applet entry for baby');
+    is($cbRes->[0]{name},    'HAScreenSaver', 'Applet name is HAScreenSaver');
+    is($cbRes->[0]{title},   'Home Assistant Clock', 'Applet title is Home Assistant Clock');
+    is($cbRes->[0]{version}, $Plugins::HAScreenSaver::Plugin::VERSION, 'Applet version matches plugin VERSION');
+    is($cbRes->[0]{relurl},  '/plugins/HAScreenSaver/HAScreenSaver.zip', 'Applet provides relurl for plain HTTP download');
+    is($cbRes->[0]{url},     'http://192.0.2.10:9000/plugins/HAScreenSaver/HAScreenSaver.zip', 'Applet url uses plain HTTP serverURL');
+    like($cbRes->[0]{sha},   qr/^[0-9a-f]{40}$/, 'Applet sha is a 40-char lowercase SHA-1');
+
+    # Non-applet type returns empty
+    my $nonAppletRes;
+    Plugins::HAScreenSaver::Plugin::getJiveExtensions({
+        type   => 'wallpaper',
+        target => 'baby',
+        cb     => sub { $nonAppletRes = $_[0]; },
+        pt     => [],
+    });
+    is(scalar(@$nonAppletRes), 0, 'getJiveExtensions returns empty for non-applet type');
+
+    # Unsupported target returns empty
+    my $badTargetRes;
+    Plugins::HAScreenSaver::Plugin::getJiveExtensions({
+        type   => 'applet',
+        target => 'unsupported_device',
+        cb     => sub { $badTargetRes = $_[0]; },
+        pt     => [],
+    });
+    is(scalar(@$badTargetRes), 0, 'getJiveExtensions returns empty for unsupported target');
+
+    # shutdownPlugin removes provider
+    Plugins::HAScreenSaver::Plugin->shutdownPlugin();
+    ok(!exists $Slim::Control::Jive::EXTENSION_PROVIDERS{hascreensaver},
+        'shutdownPlugin unregisters hascreensaver Jive extension provider');
+
+    if ($createdTempZip) {
+        unlink $zipPath;
+    }
 }
 
 done_testing();

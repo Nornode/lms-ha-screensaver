@@ -17,7 +17,7 @@ use Slim::Utils::Log;
 use Slim::Utils::Prefs;
 use Slim::Web::Pages;
 
-our $VERSION = '1.1.1';
+our $VERSION = '1.2.0';
 
 my $log = Slim::Utils::Log->addLogCategory({
     category     => 'plugin.hascreensaver',
@@ -131,7 +131,26 @@ sub initPlugin {
         \&handleAppletZip
     );
 
+    # Register native Jive extension provider so Squeezebox Radios discover and
+    # download the bundled applet directly from LMS over plain HTTP (no HTTPS
+    # failure on SqueezeOS and no extra repository URL required).
+    eval {
+        require Slim::Control::Jive;
+        Slim::Control::Jive::registerExtensionProvider('hascreensaver', \&getJiveExtensions);
+    };
+
     $class->SUPER::initPlugin(@_);
+}
+
+sub shutdownPlugin {
+    my $class = shift;
+
+    eval {
+        require Slim::Control::Jive;
+        Slim::Control::Jive::removeExtensionProvider('hascreensaver');
+    };
+
+    $class->SUPER::shutdownPlugin(@_) if $class->can('SUPER::shutdownPlugin');
 }
 
 sub getDisplayName {
@@ -622,6 +641,57 @@ sub _appletZipPath {
     return catfile(dirname(__FILE__), 'AppletDist', 'HAScreenSaver.zip');
 }
 
+sub _appletZipSha1 {
+    my $zipPath = _appletZipPath();
+    return undef unless -r $zipPath;
+
+    open my $fh, '<:raw', $zipPath or return undef;
+    local $/;
+    my $bytes = <$fh>;
+    close $fh;
+
+    return sha1_hex($bytes);
+}
+
+sub getJiveExtensions {
+    my ($args) = @_;
+    my $cb = $args->{cb};
+    my $pt = $args->{pt} || [];
+
+    my @res;
+    my $type   = $args->{type}   || '';
+    my $target = $args->{target} || '';
+
+    if ($type eq 'applet' && ($target eq '' || $target =~ /^(?:baby|fab4|jive|squeezeplay)$/)) {
+        my $sha1 = _appletZipSha1();
+        if (defined $sha1) {
+            my $serverUrl = eval {
+                require Slim::Utils::Network;
+                Slim::Utils::Network::serverURL();
+            } || 'http://localhost:9000';
+            $serverUrl =~ s{/+$}{};
+
+            push @res, {
+                name    => 'HAScreenSaver',
+                title   => 'Home Assistant Clock',
+                desc    => 'Dark-shaded digital clock screensaver for Squeezebox Radio with bottom-center weather icon, up to 4 live Home Assistant sensors, subtle radio alarm indicator, and optional door/alert banner. Zero long-term caching.',
+                creator => 'Nornode',
+                link    => 'https://github.com/Nornode/lms-ha-screensaver',
+                version => $VERSION,
+                url     => $serverUrl . '/plugins/HAScreenSaver/HAScreenSaver.zip',
+                relurl  => '/plugins/HAScreenSaver/HAScreenSaver.zip',
+                sha     => $sha1,
+            };
+        }
+    }
+
+    if (ref($cb) eq 'CODE') {
+        $cb->(@$pt, \@res);
+    }
+
+    return \@res;
+}
+
 sub buildRepoXml {
     my ($hostHeader, $version, $sha1) = @_;
     $hostHeader ||= 'localhost:9000';
@@ -642,7 +712,7 @@ sub buildRepoXml {
             version="$version"
             url="$zipUrl"
             sha="$sha1">
-      <title lang="EN">Home Assistant Screensaver</title>
+      <title lang="EN">Home Assistant Clock</title>
       <desc lang="EN">Clear digital clock screensaver with radio alarm indicator, optional door/alert banner, and up to 4 live Home Assistant sensors.</desc>
     </applet>
   </applets>

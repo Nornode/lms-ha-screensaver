@@ -29,7 +29,7 @@ RADIO_IP=192.168.x.y          # IP of your test Squeezebox Radio
 ./scripts/build.sh    # Builds dist/HAScreenSaver.zip + copies into LMS plugin AppletDist/
 ```
 
-`build.sh` ensures the zip has `HAScreenSaver/` at the archive root (required by SqueezePlay `AppletInstaller`) and computes its lowercase SHA-1 digest.
+`build.sh` ensures the applet files (`HAScreenSaverApplet.lua`, `HAScreenSaverMeta.lua`, `HAScreenSaverModel.lua`, `strings.txt`, `icons/`) sit directly at the archive root (required by SqueezePlay `SetupAppletInstaller`, which creates `applets/HAScreenSaver/` itself and extracts directly inside it) and computes its lowercase SHA-1 digest.
 
 ## 3. Deploy Plugin to Lyrion Music Server
 
