@@ -17,7 +17,7 @@ use Slim::Utils::Log;
 use Slim::Utils::Prefs;
 use Slim::Web::Pages;
 
-our $VERSION = '1.2.0';
+our $VERSION = '1.2.1';
 
 my $log = Slim::Utils::Log->addLogCategory({
     category     => 'plugin.hascreensaver',

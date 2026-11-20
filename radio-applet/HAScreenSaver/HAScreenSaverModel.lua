@@ -15,16 +15,16 @@ M.FONT_FILES = {
 }
 
 M.WEATHER_ICONS = {
-    sunny        = "applets/HAScreenSaver/icons/weather_sunny.png",
-    clear_night  = "applets/HAScreenSaver/icons/weather_clear_night.png",
-    partlycloudy = "applets/HAScreenSaver/icons/weather_partlycloudy.png",
-    cloudy       = "applets/HAScreenSaver/icons/weather_cloudy.png",
-    rainy        = "applets/HAScreenSaver/icons/weather_rainy.png",
-    pouring      = "applets/HAScreenSaver/icons/weather_pouring.png",
-    snowy        = "applets/HAScreenSaver/icons/weather_snowy.png",
-    fog          = "applets/HAScreenSaver/icons/weather_fog.png",
-    lightning    = "applets/HAScreenSaver/icons/weather_lightning.png",
-    windy        = "applets/HAScreenSaver/icons/weather_windy.png",
+    sunny        = "applets/HAScreenSaver/weather_sunny.png",
+    clear_night  = "applets/HAScreenSaver/weather_clear_night.png",
+    partlycloudy = "applets/HAScreenSaver/weather_partlycloudy.png",
+    cloudy       = "applets/HAScreenSaver/weather_cloudy.png",
+    rainy        = "applets/HAScreenSaver/weather_rainy.png",
+    pouring      = "applets/HAScreenSaver/weather_pouring.png",
+    snowy        = "applets/HAScreenSaver/weather_snowy.png",
+    fog          = "applets/HAScreenSaver/weather_fog.png",
+    lightning    = "applets/HAScreenSaver/weather_lightning.png",
+    windy        = "applets/HAScreenSaver/weather_windy.png",
 }
 
 function M.newState()

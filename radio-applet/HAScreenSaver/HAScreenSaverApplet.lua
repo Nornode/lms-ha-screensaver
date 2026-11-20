@@ -38,8 +38,8 @@ local COLOR_ALARM     = 0x8E98A8FF
 local COLOR_ALERT_BG  = 0xB8380EFF
 local COLOR_ALERT_TXT = 0xFFFFFFFF
 
-local ICON_ALARM_PATH = "applets/HAScreenSaver/icons/icon_alarm.png"
-local ICON_DOOR_PATH  = "applets/HAScreenSaver/icons/icon_door.png"
+local ICON_ALARM_PATH = "applets/HAScreenSaver/icon_alarm.png"
+local ICON_DOOR_PATH  = "applets/HAScreenSaver/icon_door.png"
 local FALLBACK_FONT   = "fonts/FreeSansBold.ttf"
 
 -- Compose 32-bit RGBA integer without Lua 5.2+ bitwise operators (Lua 5.1 safe)

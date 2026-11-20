@@ -12,9 +12,12 @@ mkdir -p "$DIST_DIR" "$APPLET_DIST_DIR"
 rm -f "$ZIP_FILE"
 
 echo "==> Packaging radio-applet/HAScreenSaver contents -> $ZIP_FILE"
-# SqueezePlay's SetupAppletInstaller creates <appletdir>/HAScreenSaver/ itself
-# and extracts archive entries directly inside it (dir .. chunk.filename).
-# Files MUST therefore live at the archive root (no leading HAScreenSaver/ folder).
+# SqueezePlay's SetupAppletInstaller:
+#   1. Creates <appletdir>/HAScreenSaver/ itself and extracts directly inside it.
+#   2. Has a bug in _zipSink() where any directory entry sets fh = 'DIR' and the
+#      next entry crashes calling fh:close() on the string 'DIR', hanging the
+#      "Downloading Applets" popup forever.
+# Therefore ALL applet files MUST live flat at the archive root with ZERO subdirectories.
 (
     cd "$ROOT_DIR/radio-applet/HAScreenSaver"
     zip -rq "$ZIP_FILE" \
@@ -22,13 +25,13 @@ echo "==> Packaging radio-applet/HAScreenSaver contents -> $ZIP_FILE"
         HAScreenSaverMeta.lua \
         HAScreenSaverModel.lua \
         strings.txt \
-        icons \
+        *.png \
         -x "*.DS_Store" "*~"
 )
 
-# Guard against double-nested HAScreenSaver/HAScreenSaver/ extraction
-if unzip -Z1 "$ZIP_FILE" | grep -q '^HAScreenSaver/'; then
-    echo "ERROR: Applet zip must have HAScreenSaverApplet.lua at root, not under HAScreenSaver/" >&2
+# Guard against any subdirectory entry (prevents SqueezePlay _zipSink fh='DIR' crash)
+if unzip -Z1 "$ZIP_FILE" | grep -q '/'; then
+    echo "ERROR: Applet zip must be completely flat (zero subdirectories) for SqueezePlay AppletInstaller" >&2
     exit 1
 fi
 

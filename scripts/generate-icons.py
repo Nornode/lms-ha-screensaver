@@ -10,7 +10,7 @@ import struct
 import zlib
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT_DIR = os.path.join(ROOT_DIR, "radio-applet", "HAScreenSaver", "icons")
+OUT_DIR = os.path.join(ROOT_DIR, "radio-applet", "HAScreenSaver")
 
 
 def write_png(path, width, height, rgba_bytes):

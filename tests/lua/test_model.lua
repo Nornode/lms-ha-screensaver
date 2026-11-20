@@ -26,7 +26,7 @@ assertEq(Model.formatTime(12, 0, true),  "12:00", "12h format noon")
 assertEq(Model.resolveFontPath("FreeSansBold"),  "fonts/FreeSansBold.ttf",  "Default font resolves")
 assertEq(Model.resolveFontPath("FreeMonoBold"),  "fonts/FreeMonoBold.ttf",  "Mono font resolves")
 assertEq(Model.resolveFontPath("UnknownFont"),   "fonts/FreeSansBold.ttf",  "Unknown font falls back")
-assertEq(Model.resolveWeatherIconPath("partlycloudy"), "applets/HAScreenSaver/icons/weather_partlycloudy.png", "Weather icon resolves")
+assertEq(Model.resolveWeatherIconPath("partlycloudy"), "applets/HAScreenSaver/weather_partlycloudy.png", "Weather icon resolves")
 assertEq(Model.resolveWeatherIconPath("bogus"), nil, "Unknown weather icon returns nil")
 
 -- 3. Server payload parsing (up to 4 sensors + weather + alarm + alert)

@@ -2,7 +2,7 @@
 <extension>
   <name>PLUGIN_HASCREENSAVER</name>
   <module>Plugins::HAScreenSaver::Plugin</module>
-  <version>1.2.0</version>
+  <version>1.2.1</version>
   <description>PLUGIN_HASCREENSAVER_DESC</description>
   <creator>Nornode</creator>
   <defaultState>enabled</defaultState>
