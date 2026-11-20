@@ -37,7 +37,7 @@ cat > "$ROOT_DIR/repo.xml" <<XML
     <title lang="EN">Home Assistant Screensaver for Lyrion Music Server</title>
   </details>
   <plugins>
-    <plugin name="HAScreenSaver" version="${VERSION}" minTarget="8.0" maxTarget="*">
+    <plugin name="HAScreenSaver" version="${VERSION}" minTarget="8.0" maxTarget="*" icon="https://raw.githubusercontent.com/${GITHUB_REPO}/main/server-plugin/HAScreenSaver/HTML/EN/plugins/HAScreenSaver/html/images/icon.png">
       <title lang="EN">Home Assistant Screensaver</title>
       <desc lang="EN">Stateless live proxy serving Home Assistant sensor states, weather condition, door/alert status, and radio alarm status to the Home Assistant Clock screensaver applet on Squeezebox Radio / UE Smart Radio, with zero long-term caching.</desc>
       <url>https://github.com/${GITHUB_REPO}/releases/download/${TAG}/HAScreenSaver-plugin-${TAG}.zip</url>
