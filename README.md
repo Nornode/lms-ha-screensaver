@@ -8,6 +8,10 @@ A clean, glanceable **digital clock screensaver for Logitech Squeezebox Radio & 
 
 Designed for room-distance readability on 2.4" Squeezebox Radio displays—large crisp time on a dark shaded gradient background, bottom-center weather icon, lower-left and lower-right temperatures with prominent digits and subtle labels/units, a muted radio alarm indicator, and an optional door-open alert pill that stays hidden when everything is closed.
 
+<p align="center">
+  <img src="docs/screenshot.png" alt="Home Assistant Clock screensaver running on a 320x240 Logitech Squeezebox Radio" width="320" height="240" />
+</p>
+
 ---
 
 ## Features
