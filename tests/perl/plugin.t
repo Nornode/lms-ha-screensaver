@@ -52,24 +52,89 @@ BEGIN {
         my %stores;
         sub preferences {
             my ($ns) = @_;
-            $stores{$ns} ||= bless { data => {} }, 'MockPrefs';
+            $stores{$ns} ||= bless { data => {}, defaults => {}, clients => {} }, 'MockPrefs';
             return $stores{$ns};
         }
         package MockPrefs;
         sub init {
             my ($self, $defaults) = @_;
+            $self->{defaults} ||= {};
             for my $k (keys %$defaults) {
+                $self->{defaults}{$k} = $defaults->{$k};
                 $self->{data}{$k} = $defaults->{$k} unless exists $self->{data}{$k};
             }
         }
         sub get {
             my ($self, $k) = @_;
-            return $self->{data}{$k};
+            return exists $self->{data}{$k} ? $self->{data}{$k} : $self->{defaults}{$k};
         }
         sub set {
             my ($self, $k, $v) = @_;
             $self->{data}{$k} = $v;
         }
+        sub client {
+            my ($self, $client) = @_;
+            return undef unless $client;
+            my $id = ref($client) && $client->can('id') ? $client->id : "$client";
+            $self->{clients}{$id} ||= bless {
+                data     => {},
+                defaults => $self->{defaults},
+            }, 'MockClientPrefs';
+            return $self->{clients}{$id};
+        }
+        package MockClientPrefs;
+        sub get {
+            my ($self, $k) = @_;
+            return exists $self->{data}{$k} ? $self->{data}{$k} : $self->{defaults}{$k};
+        }
+        sub set {
+            my ($self, $k, $v) = @_;
+            $self->{data}{$k} = $v;
+        }
+    }
+
+    # Stub Slim::Web::HTTP::CSRF and Slim::Web::Settings
+    $INC{'Slim/Web/HTTP/CSRF.pm'} = 1;
+    {
+        package Slim::Web::HTTP::CSRF;
+        sub protectName { shift; return shift; }
+        sub protectURI  { shift; return shift; }
+    }
+
+    $INC{'Slim/Web/Settings.pm'} = 1;
+    {
+        package Slim::Web::Settings;
+        sub new { return bless {}, shift; }
+        sub handler {
+            my ($class, $client, $params, $callback, @args) = @_;
+            my ($prefObj, @keys) = $class->prefs($client);
+            if ($prefObj && $params->{saveSettings}) {
+                for my $k (@keys) {
+                    if (exists $params->{"pref_$k"}) {
+                        $prefObj->set($k, $params->{"pref_$k"});
+                    }
+                }
+            }
+            if ($prefObj) {
+                $params->{prefs} ||= {};
+                for my $k (@keys) {
+                    $params->{prefs}{$k} = $prefObj->get($k);
+                }
+            }
+            return 'RENDERED';
+        }
+    }
+
+    # Mock Slim::Player::Client objects for per-radio tests
+    {
+        package MockClient;
+        sub new {
+            my ($class, %args) = @_;
+            return bless \%args, $class;
+        }
+        sub id        { return shift->{id}; }
+        sub name      { return shift->{name}; }
+        sub modelName { return shift->{modelName} || 'Squeezebox Radio'; }
     }
 
     # Stub Slim::Control::Request
@@ -291,6 +356,291 @@ is(Plugins::HAScreenSaver::Plugin::formatWeatherIcon({ state => 'unknown' }),   
     is(scalar(@{$mockResults{sensors_loop}}), 2,    'Returns 2 sensors');
     is($mockResults{sensors_loop}[0]{value}, '5.4', 'Sensor 1 value rounded');
     is($mockResults{sensors_loop}[1]{value}, '21.8','Sensor 2 value rounded');
+    is($mockResults{config_scope}, 'default', 'Unscoped request reports config_scope=default');
+}
+
+# 7. Test isHiddenOverride, resolveEffectiveConfig, and describeClientOverrides
+{
+    is(Plugins::HAScreenSaver::Plugin::isHiddenOverride('none'),   1, 'isHiddenOverride matches "none"');
+    is(Plugins::HAScreenSaver::Plugin::isHiddenOverride(' NONE '), 1, 'isHiddenOverride matches trimmed case-insensitive NONE');
+    is(Plugins::HAScreenSaver::Plugin::isHiddenOverride(''),       0, 'Empty string is not hidden');
+    is(Plugins::HAScreenSaver::Plugin::isHiddenOverride(undef),    0, 'undef is not hidden');
+    is(Plugins::HAScreenSaver::Plugin::isHiddenOverride('sensor.outside'), 0, 'Normal entity is not hidden');
+
+    my $p = Slim::Utils::Prefs::preferences('test.per_radio');
+    $p->init({
+        poll_interval    => 60,
+        font_name        => 'FreeSansBold',
+        weather_entity   => 'weather.home',
+        alert_entity     => '',
+        alert_label      => 'Open',
+        sensor1_entity   => 'sensor.outside_temp',
+        sensor1_label    => 'Out',
+        sensor1_decimals => '1',
+        sensor1_unit     => '',
+        sensor2_entity   => 'sensor.floor1_avg_temp',
+        sensor2_label    => '1st',
+        sensor2_decimals => '1',
+        sensor2_unit     => '',
+        sensor3_entity   => '',
+        sensor3_label    => '',
+        sensor3_decimals => '1',
+        sensor3_unit     => '',
+        sensor4_entity   => '',
+        sensor4_label    => '',
+        sensor4_decimals => '1',
+        sensor4_unit     => '',
+    });
+
+    my $floor1Radio = MockClient->new(id => 'aa:bb:cc:00:00:01', name => 'Living Room');
+    my $kidsRadio   = MockClient->new(id => 'aa:bb:cc:00:00:02', name => 'Kids Room');
+    my $masterRadio = MockClient->new(id => 'aa:bb:cc:00:00:03', name => 'Master Bedroom');
+
+    # Unconfigured radio inherits global defaults
+    my $cfg1 = Plugins::HAScreenSaver::Plugin::resolveEffectiveConfig($p, $floor1Radio);
+    is($cfg1->{has_overrides}, 0, 'Unconfigured radio has_overrides == 0');
+    is($cfg1->{weather_entity}, 'weather.home', 'Unconfigured radio inherits global weather');
+    is($cfg1->{alert_entity},   '',             'Unconfigured radio inherits blank alert');
+    is(scalar(@{$cfg1->{slots}}), 2,            'Unconfigured radio inherits 2 global sensors');
+    is($cfg1->{slots}[1]{entity}, 'sensor.floor1_avg_temp', 'Unconfigured radio gets 1st floor temp');
+    is(Plugins::HAScreenSaver::Plugin::describeClientOverrides($p, $floor1Radio), 'Using Global Defaults', 'Unconfigured radio summary says Using Global Defaults');
+
+    # Kids radio overrides Sensor 2 only (inherits Outside + Weather, no Door Alert)
+    my $cpKids = $p->client($kidsRadio);
+    $cpKids->set('player_sensor2_entity', 'sensor.kids_room_temp');
+    $cpKids->set('player_sensor2_label',  'Kids');
+    $cpKids->set('player_sensor2_decimals', '');
+
+    my $cfgKids = Plugins::HAScreenSaver::Plugin::resolveEffectiveConfig($p, $kidsRadio);
+    is($cfgKids->{has_overrides}, 1, 'Kids radio has_overrides == 1');
+    is($cfgKids->{weather_entity}, 'weather.home', 'Kids radio still inherits global weather');
+    is($cfgKids->{alert_entity},   '',             'Kids radio stays alert-free');
+    is($cfgKids->{slots}[0]{entity}, 'sensor.outside_temp',   'Kids radio inherits Sensor 1');
+    is($cfgKids->{slots}[1]{entity}, 'sensor.kids_room_temp', 'Kids radio overrides Sensor 2');
+    is($cfgKids->{slots}[1]{label},  'Kids',                  'Kids radio uses custom label');
+    is($cfgKids->{slots}[1]{decimals}, '1',                   'Kids radio falls back to global decimals when left blank');
+    is(Plugins::HAScreenSaver::Plugin::describeClientOverrides($p, $kidsRadio), 'Sensor 2 (Kids)', 'Kids radio summary describes Sensor 2');
+
+    # Master radio enables Door Alert + overrides Sensor 2 with explicit 0 decimals + font override
+    my $cpMaster = $p->client($masterRadio);
+    $cpMaster->set('player_font_name',        'FreeSans');
+    $cpMaster->set('player_alert_entity',     'sensor.open_doors');
+    $cpMaster->set('player_alert_label',      'Doors');
+    $cpMaster->set('player_sensor2_entity',   'sensor.floor2_avg_temp');
+    $cpMaster->set('player_sensor2_label',    '2nd');
+    $cpMaster->set('player_sensor2_decimals', '0');
+
+    my $cfgMaster = Plugins::HAScreenSaver::Plugin::resolveEffectiveConfig($p, $masterRadio);
+    is($cfgMaster->{has_overrides}, 1, 'Master radio has_overrides == 1');
+    is($cfgMaster->{font_name},     'FreeSans',          'Master radio overrides font');
+    is($cfgMaster->{alert_entity},  'sensor.open_doors', 'Master radio enables Door Alert');
+    is($cfgMaster->{alert_label},   'Doors',             'Master radio uses custom alert label');
+    is($cfgMaster->{slots}[1]{entity},   'sensor.floor2_avg_temp', 'Master radio overrides Sensor 2');
+    is($cfgMaster->{slots}[1]{decimals}, '0',                      'Master radio explicit decimals "0" preserved');
+    is(Plugins::HAScreenSaver::Plugin::describeClientOverrides($p, $masterRadio),
+        'Font (FreeSans), Alert (Doors), Sensor 2 (2nd)',
+        'Master radio summary lists font, alert, and sensor overrides');
+
+    # Hiding a global default via "none" + slot compaction
+    my $hideRadio = MockClient->new(id => 'aa:bb:cc:00:00:04', name => 'Minimal');
+    my $cpHide = $p->client($hideRadio);
+    $cpHide->set('player_weather_entity', 'NONE');
+    $cpHide->set('player_sensor1_entity', 'none');
+    my $cfgHide = Plugins::HAScreenSaver::Plugin::resolveEffectiveConfig($p, $hideRadio);
+    is($cfgHide->{has_overrides},  1,  'Hidden override sets has_overrides == 1');
+    is($cfgHide->{weather_entity}, '', 'Weather hidden via NONE');
+    is(scalar(@{$cfgHide->{slots}}), 1, 'Sensor 1 hidden compacts slots to remaining Sensor 2');
+    is($cfgHide->{slots}[0]{entity}, 'sensor.floor1_avg_temp', 'Compacted slot 0 is global Sensor 2');
+    is(Plugins::HAScreenSaver::Plugin::describeClientOverrides($p, $hideRadio),
+        'Weather (hidden), Sensor 1 (hidden)',
+        'Hidden summary describes hidden items');
+
+    # Dynamic Global Default update flows to inherited slots without overwriting overrides
+    $p->set('sensor1_entity', 'sensor.new_outside_temp');
+    my $cfgKidsAfter = Plugins::HAScreenSaver::Plugin::resolveEffectiveConfig($p, $kidsRadio);
+    is($cfgKidsAfter->{slots}[0]{entity}, 'sensor.new_outside_temp', 'Global default change flows to inherited Sensor 1');
+    is($cfgKidsAfter->{slots}[1]{entity}, 'sensor.kids_room_temp',   'Global default change preserves custom Sensor 2');
+
+    # Invalid player font falls back to FreeSansBold
+    $cpMaster->set('player_font_name', '../evil.ttf');
+    my $cfgBadFont = Plugins::HAScreenSaver::Plugin::resolveEffectiveConfig($p, $masterRadio);
+    is($cfgBadFont->{font_name}, 'FreeSansBold', 'Invalid per-player font falls back to FreeSansBold');
+}
+
+# 8. End-to-end handleSensorsRequest across multiple radios
+{
+    my $prefs = Slim::Utils::Prefs::preferences('plugin.hascreensaver');
+    $prefs->set('ha_url',         'http://example.ha:8123');
+    $prefs->set('ha_token',       'test-token');
+    $prefs->set('poll_interval',  60);
+    $prefs->set('font_name',      'FreeSansBold');
+    $prefs->set('weather_entity', 'weather.home');
+    $prefs->set('alert_entity',   '');
+    $prefs->set('alert_label',    'Open');
+    $prefs->set('sensor1_entity', 'sensor.outside_temperature');
+    $prefs->set('sensor1_label',  'Out');
+    $prefs->set('sensor2_entity', 'sensor.floor1_avg_temp');
+    $prefs->set('sensor2_label',  '1st');
+
+    %Slim::Networking::SimpleAsyncHTTP::MOCK_RESPONSES = (
+        'http://example.ha:8123/api/states/sensor.outside_temperature' => {
+            content => '{"state":"4.2","attributes":{"unit_of_measurement":"°C"}}',
+        },
+        'http://example.ha:8123/api/states/sensor.floor1_avg_temp' => {
+            content => '{"state":"21.4","attributes":{"unit_of_measurement":"°C"}}',
+        },
+        'http://example.ha:8123/api/states/sensor.kids_room_temp' => {
+            content => '{"state":"19.8","attributes":{"unit_of_measurement":"°C"}}',
+        },
+        'http://example.ha:8123/api/states/sensor.open_doors' => {
+            content => '{"state":"Patio"}',
+        },
+        'http://example.ha:8123/api/states/weather.home' => {
+            content => '{"state":"sunny"}',
+        },
+    );
+
+    my $r1 = MockClient->new(id => '11:11:11:11:11:01', name => 'Kitchen');
+    my $r2 = MockClient->new(id => '11:11:11:11:11:02', name => 'Kids');
+    my $r3 = MockClient->new(id => '11:11:11:11:11:03', name => 'Bedroom');
+
+    $prefs->client($r2)->set('player_sensor2_entity', 'sensor.kids_room_temp');
+    $prefs->client($r2)->set('player_sensor2_label',  'Room');
+
+    $prefs->client($r3)->set('player_alert_entity',   'sensor.open_doors');
+    $prefs->client($r3)->set('player_alert_label',    'Doors');
+    $prefs->client($r3)->set('player_weather_entity', 'none');
+
+    my $runReq = sub {
+        my ($client) = @_;
+        @Slim::Networking::SimpleAsyncHTTP::REQUESTS = ();
+        my %res;
+        my $done = 0;
+        my $req = bless {
+            client  => $client,
+            results => \%res,
+            done    => \$done,
+        }, 'MockClientRequest';
+        Plugins::HAScreenSaver::Plugin::handleSensorsRequest($req);
+        return (\%res, $done, [@Slim::Networking::SimpleAsyncHTTP::REQUESTS]);
+    };
+
+    {
+        package MockClientRequest;
+        sub isNotQuery          { return 0; }
+        sub client              { return shift->{client}; }
+        sub setStatusProcessing {}
+        sub setStatusDone       { my $s = shift; ${$s->{done}} = 1; }
+        sub addResult           { my ($s, $k, $v) = @_; $s->{results}{$k} = $v; }
+    }
+
+    my ($res1, $done1, $reqs1) = $runReq->($r1);
+    is($done1, 1, 'Kitchen request done');
+    is($res1->{config_scope}, 'default', 'Kitchen uses default scope');
+    is($res1->{alert_active}, 0,         'Kitchen has no door alert');
+    is($res1->{sensors_loop}[1]{value}, '21.4', 'Kitchen gets 1st floor avg');
+    is(scalar(@$reqs1), 3, 'Kitchen fires 3 HTTP calls (2 sensors + weather, no alert)');
+
+    my ($res2, $done2, $reqs2) = $runReq->($r2);
+    is($done2, 1, 'Kids request done');
+    is($res2->{config_scope}, 'player', 'Kids uses player scope');
+    is($res2->{alert_active}, 0,        'Kids has no door alert');
+    is($res2->{sensors_loop}[0]{value}, '4.2',  'Kids gets global outside temp');
+    is($res2->{sensors_loop}[1]{value}, '19.8', 'Kids gets custom room temp');
+    is($res2->{sensors_loop}[1]{label}, 'Room', 'Kids gets custom label');
+    is(scalar(@$reqs2), 3, 'Kids fires 3 HTTP calls (no alert fetch)');
+    my @urls2 = sort map { $_->{url} } @$reqs2;
+    is_deeply(\@urls2, [
+        'http://example.ha:8123/api/states/sensor.kids_room_temp',
+        'http://example.ha:8123/api/states/sensor.outside_temperature',
+        'http://example.ha:8123/api/states/weather.home',
+    ], 'Kids fetched exact expected HA entities');
+
+    my ($res3, $done3, $reqs3) = $runReq->($r3);
+    is($done3, 1, 'Bedroom request done');
+    is($res3->{config_scope}, 'player',       'Bedroom uses player scope');
+    is($res3->{weather_icon}, '',             'Bedroom hid weather via none');
+    is($res3->{alert_active}, 1,              'Bedroom shows active door alert');
+    is($res3->{alert_text},   'Doors: Patio', 'Bedroom formats custom door alert');
+    my @urls3 = sort map { $_->{url} } @$reqs3;
+    is_deeply(\@urls3, [
+        'http://example.ha:8123/api/states/sensor.floor1_avg_temp',
+        'http://example.ha:8123/api/states/sensor.open_doors',
+        'http://example.ha:8123/api/states/sensor.outside_temperature',
+    ], 'Bedroom skipped hidden weather fetch and fetched custom alert');
+    for my $r (@$reqs3) {
+        is($r->{params}{cache}, 0, "Per-radio request to $r->{url} sets cache => 0");
+        is($r->{headers}{'Cache-Control'}, 'no-cache', "Per-radio request to $r->{url} sets Cache-Control: no-cache");
+    }
+}
+
+# 9. Test PlayerSettings.pm: needsClient, prefs guard, save sanitization, and reset
+{
+    require HAScreenSaver::PlayerSettings;
+
+    is(Plugins::HAScreenSaver::PlayerSettings->needsClient(), 1, 'PlayerSettings requires a client');
+    is_deeply([Plugins::HAScreenSaver::PlayerSettings->prefs(undef)], [], 'prefs(undef) returns empty list safely');
+
+    my $pClient = MockClient->new(id => '22:22:22:22:22:01', name => 'Study Radio');
+    my ($store, @keys) = Plugins::HAScreenSaver::PlayerSettings->prefs($pClient);
+    ok($store && scalar(@keys) == 20, 'prefs($client) returns client store and 20 player preference keys');
+
+    my $params = {
+        saveSettings             => 1,
+        pref_player_font_name    => '../invalid',
+        pref_player_weather_entity => ' NONE ',
+        pref_player_alert_entity => '  sensor.open_doors  ',
+        pref_player_alert_label  => ' Doors ',
+        pref_player_sensor2_entity => ' sensor.study_temp ',
+        pref_player_sensor2_label  => ' Study ',
+    };
+    Plugins::HAScreenSaver::PlayerSettings->handler($pClient, $params);
+
+    is($params->{player_name}, 'Study Radio', 'handler populates player_name');
+    is($params->{defaults}{sensor1_entity}, 'sensor.outside_temperature', 'handler populates global defaults for template');
+    is($store->get('player_font_name'),      'FreeSansBold',      'Invalid font sanitized on save');
+    is($store->get('player_weather_entity'), 'none',              'Case-insensitive NONE normalized to none');
+    is($store->get('player_alert_entity'),   'sensor.open_doors', 'Alert entity trimmed on save');
+    is($store->get('player_sensor2_entity'), 'sensor.study_temp', 'Sensor 2 entity trimmed on save');
+    like($params->{override_summary}, qr/Alert \(Doors\).*Sensor 2 \(Study\)/, 'override_summary updated on save');
+
+    # Test resetPlayerOverrides clears all player_* fields
+    my $resetParams = {
+        saveSettings               => 1,
+        resetPlayerOverrides       => 1,
+        pref_player_sensor2_entity => 'sensor.study_temp',
+    };
+    Plugins::HAScreenSaver::PlayerSettings->handler($pClient, $resetParams);
+    is($store->get('player_font_name'),      '', 'Reset clears player_font_name');
+    is($store->get('player_weather_entity'), '', 'Reset clears player_weather_entity');
+    is($store->get('player_alert_entity'),   '', 'Reset clears player_alert_entity');
+    is($store->get('player_sensor2_entity'), '', 'Reset clears player_sensor2_entity');
+    is($resetParams->{override_summary}, 'Using Global Defaults', 'Reset restores override_summary to Using Global Defaults');
+}
+
+# 10. Test Settings.pm: players overview summary
+{
+    $INC{'Slim/Player/Client.pm'} = 1;
+    my @mockClients = (
+        MockClient->new(id => '11:11:11:11:11:02', name => 'Kids'),
+        MockClient->new(id => '11:11:11:11:11:01', name => 'Kitchen'),
+        MockClient->new(id => '11:11:11:11:11:03', name => 'Bedroom'),
+    );
+    {
+        package Slim::Player::Client;
+        sub clients { return @mockClients; }
+    }
+
+    require HAScreenSaver::Settings;
+    my $params = { host => 'lms.local:9000' };
+    Plugins::HAScreenSaver::Settings->handler(undef, $params);
+
+    is($params->{local_repo_url}, 'http://lms.local:9000/plugins/HAScreenSaver/repo.xml', 'Settings builds local_repo_url');
+    is(scalar(@{$params->{players}}), 3, 'Settings populates 3 sorted players');
+    is($params->{players}[0]{name}, 'Bedroom', 'Players sorted alphabetically (Bedroom first)');
+    is($params->{players}[0]{has_overrides}, 1, 'Bedroom marked has_overrides=1');
+    is($params->{players}[2]{name}, 'Kitchen', 'Kitchen sorted last');
+    is($params->{players}[2]{summary}, 'Using Global Defaults', 'Kitchen summary reports Using Global Defaults');
 }
 
 done_testing();

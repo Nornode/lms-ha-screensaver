@@ -17,7 +17,7 @@ use Slim::Utils::Log;
 use Slim::Utils::Prefs;
 use Slim::Web::Pages;
 
-our $VERSION = '1.0.0';
+our $VERSION = '1.1.0';
 
 my $log = Slim::Utils::Log->addLogCategory({
     category     => 'plugin.hascreensaver',
@@ -104,6 +104,9 @@ sub initPlugin {
     if (main::WEBUI) {
         require Plugins::HAScreenSaver::Settings;
         Plugins::HAScreenSaver::Settings->new;
+
+        require Plugins::HAScreenSaver::PlayerSettings;
+        Plugins::HAScreenSaver::PlayerSettings->new;
     }
 
     # Player-aware live sensor + alarm query (stateless, zero caching)
@@ -167,6 +170,169 @@ sub sanitizeFontName {
     my ($font) = @_;
     $font = _trim($font);
     return $ALLOWED_FONTS{$font} ? $font : 'FreeSansBold';
+}
+
+sub playerPrefKeys {
+    return (
+        'player_font_name',
+        'player_weather_entity',
+        'player_alert_entity',
+        'player_alert_label',
+        map {
+            (
+                "player_sensor${_}_entity",
+                "player_sensor${_}_label",
+                "player_sensor${_}_decimals",
+                "player_sensor${_}_unit",
+            )
+        } (1 .. 4)
+    );
+}
+
+sub isHiddenOverride {
+    my ($val) = @_;
+    return lc(_trim($val)) eq 'none' ? 1 : 0;
+}
+
+sub resolveEffectiveConfig {
+    my ($prefObj, $client) = @_;
+
+    my $cprefs = ($client && $prefObj && $prefObj->can('client'))
+        ? $prefObj->client($client)
+        : undef;
+
+    my $hasOverrides = 0;
+    my $pollInterval = sanitizePollInterval($prefObj ? $prefObj->get('poll_interval') : undef);
+
+    my $pFont = $cprefs ? _trim($cprefs->get('player_font_name')) : '';
+    my $fontName;
+    if ($pFont ne '') {
+        $hasOverrides = 1;
+        $fontName     = sanitizeFontName($pFont);
+    } else {
+        $fontName = sanitizeFontName($prefObj ? $prefObj->get('font_name') : undef);
+    }
+
+    my $pWeather = $cprefs ? _trim($cprefs->get('player_weather_entity')) : '';
+    my $weatherEntity;
+    if (isHiddenOverride($pWeather)) {
+        $hasOverrides  = 1;
+        $weatherEntity = '';
+    } elsif ($pWeather ne '') {
+        $hasOverrides  = 1;
+        $weatherEntity = $pWeather;
+    } else {
+        $weatherEntity = $prefObj ? _trim($prefObj->get('weather_entity')) : '';
+    }
+
+    my $pAlert = $cprefs ? _trim($cprefs->get('player_alert_entity')) : '';
+    my ($alertEntity, $alertLabel);
+    if (isHiddenOverride($pAlert)) {
+        $hasOverrides = 1;
+        $alertEntity  = '';
+        $alertLabel   = '';
+    } elsif ($pAlert ne '') {
+        $hasOverrides = 1;
+        $alertEntity  = $pAlert;
+        $alertLabel   = _trim($cprefs->get('player_alert_label'));
+    } else {
+        $alertEntity = $prefObj ? _trim($prefObj->get('alert_entity')) : '';
+        $alertLabel  = $prefObj ? _trim($prefObj->get('alert_label'))  : '';
+    }
+
+    my @slots;
+    for my $i (1 .. 4) {
+        my $pEntity = $cprefs ? _trim($cprefs->get("player_sensor${i}_entity")) : '';
+        if (isHiddenOverride($pEntity)) {
+            $hasOverrides = 1;
+            next;
+        } elsif ($pEntity ne '') {
+            $hasOverrides = 1;
+            my $dec = _trim($cprefs->get("player_sensor${i}_decimals"));
+            if ($dec eq '' && $prefObj) {
+                $dec = _trim($prefObj->get("sensor${i}_decimals"));
+            }
+            push @slots, {
+                index    => scalar(@slots),
+                entity   => $pEntity,
+                label    => _trim($cprefs->get("player_sensor${i}_label")),
+                decimals => $dec,
+                unit     => _trim($cprefs->get("player_sensor${i}_unit")),
+            };
+        } else {
+            my $gEntity = $prefObj ? _trim($prefObj->get("sensor${i}_entity")) : '';
+            next if $gEntity eq '';
+            push @slots, {
+                index    => scalar(@slots),
+                entity   => $gEntity,
+                label    => _trim($prefObj->get("sensor${i}_label")),
+                decimals => _trim($prefObj->get("sensor${i}_decimals")),
+                unit     => _trim($prefObj->get("sensor${i}_unit")),
+            };
+        }
+    }
+
+    return {
+        poll_interval  => $pollInterval,
+        font_name      => $fontName,
+        weather_entity => $weatherEntity,
+        alert_entity   => $alertEntity,
+        alert_label    => $alertLabel,
+        slots          => \@slots,
+        has_overrides  => $hasOverrides,
+    };
+}
+
+sub describeOverrides {
+    my ($getter) = @_;
+    return 'Using Global Defaults' unless ref($getter) eq 'CODE';
+
+    my @parts;
+
+    my $pFont = _trim($getter->('player_font_name'));
+    if ($pFont ne '') {
+        push @parts, 'Font (' . sanitizeFontName($pFont) . ')';
+    }
+
+    my $pWeather = _trim($getter->('player_weather_entity'));
+    if (isHiddenOverride($pWeather)) {
+        push @parts, 'Weather (hidden)';
+    } elsif ($pWeather ne '') {
+        push @parts, 'Weather (custom)';
+    }
+
+    my $pAlert = _trim($getter->('player_alert_entity'));
+    if (isHiddenOverride($pAlert)) {
+        push @parts, 'Alert (hidden)';
+    } elsif ($pAlert ne '') {
+        my $lbl = _trim($getter->('player_alert_label'));
+        push @parts, 'Alert (' . ($lbl ne '' ? $lbl : 'custom') . ')';
+    }
+
+    for my $i (1 .. 4) {
+        my $pEntity = _trim($getter->("player_sensor${i}_entity"));
+        if (isHiddenOverride($pEntity)) {
+            push @parts, "Sensor $i (hidden)";
+        } elsif ($pEntity ne '') {
+            my $lbl = _trim($getter->("player_sensor${i}_label"));
+            push @parts, "Sensor $i (" . ($lbl ne '' ? $lbl : $pEntity) . ')';
+        }
+    }
+
+    return @parts ? join(', ', @parts) : 'Using Global Defaults';
+}
+
+sub describeClientOverrides {
+    my ($prefObj, $client) = @_;
+    return 'Using Global Defaults' unless $client && $prefObj && $prefObj->can('client');
+
+    my $cprefs = $prefObj->client($client);
+    return 'Using Global Defaults' unless $cprefs;
+
+    return describeOverrides(sub {
+        my ($key) = @_;
+        return $cprefs->get($key);
+    });
 }
 
 sub formatSensorState {
@@ -294,6 +460,22 @@ sub handleRefreshRequest {
     $request->setStatusDone();
 }
 
+sub _populateSensorsResponse {
+    my ($request, $cfg, $alarmInfo, $weatherIcon, $alertRes, $results, $mode) = @_;
+
+    $request->addResult('poll_interval', $cfg->{poll_interval});
+    $request->addResult('font_name',     $cfg->{font_name});
+    $request->addResult('alarm_active',  $alarmInfo->{alarm_active});
+    $request->addResult('alarm_time',    $alarmInfo->{alarm_time});
+    $request->addResult('weather_icon',  $weatherIcon);
+    $request->addResult('alert_active',  $alertRes->{active});
+    $request->addResult('alert_text',    $alertRes->{text});
+    $request->addResult('sensors_loop',  $results);
+    $request->addResult('mode',          $mode);
+    $request->addResult('config_scope',  $cfg->{has_overrides} ? 'player' : 'default');
+    $request->setStatusDone();
+}
+
 sub handleSensorsRequest {
     my ($request) = @_;
 
@@ -302,29 +484,16 @@ sub handleSensorsRequest {
         return;
     }
 
-    my $client       = $request->client();
-    my $pollInterval = sanitizePollInterval($prefs->get('poll_interval'));
-    my $fontName     = sanitizeFontName($prefs->get('font_name'));
-    my $alarmInfo    = getPlayerAlarmInfo($client);
+    my $client    = $request->client();
+    my $cfg       = resolveEffectiveConfig($prefs, $client);
+    my $alarmInfo = getPlayerAlarmInfo($client);
 
     my ($baseUrl, $token, $mode) = resolveHAConfig($prefs, \%ENV);
 
-    my @slots;
-    for my $i (1 .. 4) {
-        my $entity = _trim($prefs->get("sensor${i}_entity"));
-        next if $entity eq '';
-        push @slots, {
-            index    => scalar(@slots),
-            entity   => $entity,
-            label    => _trim($prefs->get("sensor${i}_label")),
-            decimals => _trim($prefs->get("sensor${i}_decimals")),
-            unit     => _trim($prefs->get("sensor${i}_unit")),
-        };
-    }
-
-    my $weatherEntity = _trim($prefs->get('weather_entity'));
-    my $alertEntity   = _trim($prefs->get('alert_entity'));
-    my $alertLabel    = _trim($prefs->get('alert_label'));
+    my @slots         = @{ $cfg->{slots} };
+    my $weatherEntity = $cfg->{weather_entity};
+    my $alertEntity   = $cfg->{alert_entity};
+    my $alertLabel    = $cfg->{alert_label};
 
     my $totalFetches = scalar(@slots)
         + ($weatherEntity ne '' ? 1 : 0)
@@ -332,16 +501,7 @@ sub handleSensorsRequest {
 
     if ($totalFetches == 0 || $mode eq 'unconfigured') {
         my @fallbackSensors = map { formatSensorState(undef, $_) } @slots;
-        $request->addResult('poll_interval', $pollInterval);
-        $request->addResult('font_name',     $fontName);
-        $request->addResult('alarm_active',  $alarmInfo->{alarm_active});
-        $request->addResult('alarm_time',    $alarmInfo->{alarm_time});
-        $request->addResult('weather_icon',  '');
-        $request->addResult('alert_active',  0);
-        $request->addResult('alert_text',    '');
-        $request->addResult('sensors_loop',  \@fallbackSensors);
-        $request->addResult('mode',          $mode);
-        $request->setStatusDone();
+        _populateSensorsResponse($request, $cfg, $alarmInfo, '', { active => 0, text => '' }, \@fallbackSensors, $mode);
         return;
     }
 
@@ -355,17 +515,7 @@ sub handleSensorsRequest {
     my $finishOne = sub {
         $remaining--;
         return if $remaining > 0;
-
-        $request->addResult('poll_interval', $pollInterval);
-        $request->addResult('font_name',     $fontName);
-        $request->addResult('alarm_active',  $alarmInfo->{alarm_active});
-        $request->addResult('alarm_time',    $alarmInfo->{alarm_time});
-        $request->addResult('weather_icon',  $weatherIcon);
-        $request->addResult('alert_active',  $alertRes->{active});
-        $request->addResult('alert_text',    $alertRes->{text});
-        $request->addResult('sensors_loop',  \@results);
-        $request->addResult('mode',          $mode);
-        $request->setStatusDone();
+        _populateSensorsResponse($request, $cfg, $alarmInfo, $weatherIcon, $alertRes, \@results, $mode);
     };
 
     my @headers = (

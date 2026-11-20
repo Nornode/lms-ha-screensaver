@@ -68,6 +68,29 @@ sub handler {
     my $host = $params->{host} || 'localhost:9000';
     $params->{local_repo_url} = "http://${host}/plugins/HAScreenSaver/repo.xml";
 
+    my @players;
+    my @clients = eval {
+        require Slim::Player::Client;
+        Slim::Player::Client::clients();
+    };
+    my @sorted = sort {
+        lc((eval { $a->name } || eval { $a->id } || ''))
+        cmp
+        lc((eval { $b->name } || eval { $b->id } || ''))
+    } grep { defined $_ } @clients;
+
+    for my $c (@sorted) {
+        my $cfg = Plugins::HAScreenSaver::Plugin::resolveEffectiveConfig($prefs, $c);
+        push @players, {
+            id            => (eval { $c->id }        || ''),
+            name          => (eval { $c->name }      || eval { $c->id } || ''),
+            model         => (eval { $c->modelName } || eval { $c->model } || ''),
+            has_overrides => $cfg->{has_overrides},
+            summary       => Plugins::HAScreenSaver::Plugin::describeClientOverrides($prefs, $c),
+        };
+    }
+    $params->{players} = \@players;
+
     return $class->SUPER::handler($client, $params, $callback, @args);
 }
 

@@ -1,0 +1,83 @@
+[% PROCESS settings/header.html %]
+
+[% WRAPPER settingSection %]
+	[% WRAPPER settingGroup title="PLUGIN_HASCREENSAVER_PLAYER_INTRO" desc="PLUGIN_HASCREENSAVER_PLAYER_INTRO_DESC" %]
+		<p><strong>[% "PLUGIN_HASCREENSAVER_PLAYER_STATUS" | string %]:</strong> [% override_summary | html %]</p>
+	[% END %]
+[% END %]
+
+[% WRAPPER settingSection %]
+	[% WRAPPER settingGroup title="PLUGIN_HASCREENSAVER_FONT_NAME" desc="PLUGIN_HASCREENSAVER_PLAYER_FONT_DESC" %]
+		<select class="stdedit" name="pref_player_font_name" id="pref_player_font_name">
+			<option value="" [% IF !prefs.player_font_name %]selected[% END %]>[% "PLUGIN_HASCREENSAVER_USE_GLOBAL_DEFAULT" | string %] ([% defaults.font_name | html %])</option>
+			<option value="FreeSansBold" [% IF prefs.player_font_name == 'FreeSansBold' %]selected[% END %]>FreeSans Bold (Default)</option>
+			<option value="FreeSans" [% IF prefs.player_font_name == 'FreeSans' %]selected[% END %]>FreeSans Regular</option>
+			<option value="FreeMonoBold" [% IF prefs.player_font_name == 'FreeMonoBold' %]selected[% END %]>FreeMono Bold (Tabular)</option>
+			<option value="FreeSerifBold" [% IF prefs.player_font_name == 'FreeSerifBold' %]selected[% END %]>FreeSerif Bold (Classic)</option>
+		</select>
+	[% END %]
+[% END %]
+
+[% WRAPPER settingSection %]
+	[% WRAPPER settingGroup title="PLUGIN_HASCREENSAVER_WEATHER_SECTION" desc="PLUGIN_HASCREENSAVER_PLAYER_WEATHER_DESC" %]
+		<label for="pref_player_weather_entity">[% "PLUGIN_HASCREENSAVER_WEATHER_ENTITY" | string %]:</label>
+		<input type="text" class="stdedit" name="pref_player_weather_entity" id="pref_player_weather_entity" value="[% prefs.player_weather_entity | html %]" size="40" placeholder="[% defaults.weather_entity | html %]" /><br/>
+		<small>[% "PLUGIN_HASCREENSAVER_GLOBAL_DEFAULT_LABEL" | string %]: [% IF defaults.weather_entity %]<code>[% defaults.weather_entity | html %]</code>[% ELSE %]<em>[% "PLUGIN_HASCREENSAVER_NOT_SET" | string %]</em>[% END %]</small>
+	[% END %]
+[% END %]
+
+[% WRAPPER settingSection %]
+	[% WRAPPER settingGroup title="PLUGIN_HASCREENSAVER_ALERT_SECTION" desc="PLUGIN_HASCREENSAVER_PLAYER_ALERT_DESC" %]
+		<label for="pref_player_alert_entity">[% "PLUGIN_HASCREENSAVER_ALERT_ENTITY" | string %]:</label>
+		<input type="text" class="stdedit" name="pref_player_alert_entity" id="pref_player_alert_entity" value="[% prefs.player_alert_entity | html %]" size="40" placeholder="[% defaults.alert_entity | html %]" />
+		&nbsp;
+		<label for="pref_player_alert_label">[% "PLUGIN_HASCREENSAVER_ALERT_LABEL" | string %]:</label>
+		<input type="text" class="stdedit" name="pref_player_alert_label" id="pref_player_alert_label" value="[% prefs.player_alert_label | html %]" size="16" placeholder="[% defaults.alert_label | html %]" /><br/>
+		<small>[% "PLUGIN_HASCREENSAVER_GLOBAL_DEFAULT_LABEL" | string %]: [% IF defaults.alert_entity %]<code>[% defaults.alert_entity | html %]</code>[% IF defaults.alert_label %] ([% defaults.alert_label | html %])[% END %][% ELSE %]<em>[% "PLUGIN_HASCREENSAVER_NOT_SET" | string %]</em>[% END %]</small>
+	[% END %]
+[% END %]
+
+[% WRAPPER settingSection %]
+	[% WRAPPER settingGroup title="PLUGIN_HASCREENSAVER_SENSORS_SECTION" desc="PLUGIN_HASCREENSAVER_PLAYER_SENSORS_DESC" %]
+		<table>
+			<tr>
+				<th>#</th>
+				<th>[% "PLUGIN_HASCREENSAVER_ENTITY_ID" | string %]</th>
+				<th>[% "PLUGIN_HASCREENSAVER_LABEL" | string %]</th>
+				<th>[% "PLUGIN_HASCREENSAVER_DECIMALS" | string %]</th>
+				<th>[% "PLUGIN_HASCREENSAVER_UNIT" | string %]</th>
+			</tr>
+			[% FOREACH idx IN [1, 2, 3, 4] %]
+				[% SET ekey = "player_sensor" _ idx _ "_entity" %]
+				[% SET lkey = "player_sensor" _ idx _ "_label" %]
+				[% SET dkey = "player_sensor" _ idx _ "_decimals" %]
+				[% SET ukey = "player_sensor" _ idx _ "_unit" %]
+				[% SET gekey = "sensor" _ idx _ "_entity" %]
+				[% SET glkey = "sensor" _ idx _ "_label" %]
+				[% SET gdkey = "sensor" _ idx _ "_decimals" %]
+				[% SET gukey = "sensor" _ idx _ "_unit" %]
+				<tr>
+					<td valign="top">[% idx %]</td>
+					<td>
+						<input type="text" class="stdedit" name="pref_[% ekey %]" value="[% prefs.$ekey | html %]" size="36" placeholder="[% defaults.$gekey | html %]" /><br/>
+						<small>[% "PLUGIN_HASCREENSAVER_GLOBAL_DEFAULT_LABEL" | string %]: [% IF defaults.$gekey %]<code>[% defaults.$gekey | html %]</code>[% IF defaults.$glkey %] ([% defaults.$glkey | html %])[% END %][% ELSE %]<em>[% "PLUGIN_HASCREENSAVER_NOT_SET" | string %]</em>[% END %]</small>
+					</td>
+					<td valign="top"><input type="text" class="stdedit" name="pref_[% lkey %]" value="[% prefs.$lkey | html %]" size="12" placeholder="[% defaults.$glkey | html %]" /></td>
+					<td valign="top"><input type="text" class="stdedit" name="pref_[% dkey %]" value="[% prefs.$dkey | html %]" size="3" placeholder="[% defaults.$gdkey | html %]" /></td>
+					<td valign="top"><input type="text" class="stdedit" name="pref_[% ukey %]" value="[% prefs.$ukey | html %]" size="6" placeholder="[% defaults.$gukey | html %]" /></td>
+				</tr>
+			[% END %]
+		</table>
+	[% END %]
+[% END %]
+
+[% WRAPPER settingSection %]
+	[% WRAPPER settingGroup title="PLUGIN_HASCREENSAVER_PLAYER_RESET_SECTION" desc="PLUGIN_HASCREENSAVER_PLAYER_RESET_DESC" %]
+		<label for="resetPlayerOverrides">
+			<input type="checkbox" name="resetPlayerOverrides" id="resetPlayerOverrides" value="1" />
+			[% "PLUGIN_HASCREENSAVER_PLAYER_RESET_LABEL" | string %]
+		</label>
+	[% END %]
+[% END %]
+
+[% PROCESS settings/footer.html %]

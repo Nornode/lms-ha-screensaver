@@ -24,6 +24,7 @@ Designed for room-distance readability on 2.4" Squeezebox Radio displays—large
   - **Readable typography**: Large bright bold values (`28px`) paired with smaller muted units (`14px`) and subtle labels (`11px`).
 - **Subtle Radio Alarm Indicator**: Shows a muted bell icon and next scheduled alarm time (`HH:MM`) in the top-right corner when an alarm is active on that specific radio.
 - **Optional Door / Alert Banner**: Displays an alert pill with a door icon in the top-left corner **only** when a configured `binary_sensor` or text sensor is active (automatically hidden when `off`, `closed`, `none`, `ok`, or empty).
+- **Per-Radio Custom Overrides**: Set Global Defaults once for all radios, then optionally override individual sensors, weather, door alerts, or clock font per radio in LMS Player Settings—with zero applet reinstallation required on existing Squeezebox Radios.
 - **Zero Long-Term Caching (LMS & Radio)**:
   - LMS fetches Home Assistant live on demand via non-blocking `Slim::Networking::SimpleAsyncHTTP` with `cache => 0` and `Cache-Control: no-cache`, discarding values immediately after responding.
   - The Squeezebox Radio holds readings strictly in transient RAM while the screensaver is active, clears stale readings to `--` if refreshes fail, and never writes sensor data to flash storage.
@@ -61,9 +62,9 @@ flowchart LR
 3. Click **Apply** and restart Lyrion Music Server if prompted.
 4. Enable **Home Assistant Screensaver** in the plugin list and restart LMS.
 
-### Step 2: Configure Home Assistant Entities in LMS
+### Step 2: Configure Global Defaults in LMS
 
-Open **Settings → Plugins → Home Assistant Screensaver**:
+Open **Settings → Plugins → Home Assistant Screensaver** to configure your connection and **Global Defaults** (applied automatically to every radio without custom overrides):
 
 - **Home Assistant Connection**:
   - **Home Assistant Add-on (e.g. `pssc/ha-addon-lms`)**: Leave URL and Token blank — the plugin auto-connects via the local Supervisor API (`mode: supervisor`).
@@ -71,11 +72,31 @@ Open **Settings → Plugins → Home Assistant Screensaver**:
 - **Update Interval**: Default `60` seconds (configurable `10`–`300`s).
 - **Clock Font**: `FreeSansBold` (default) or `FreeSans` (built into Squeezebox Radio).
 - **Weather Entity ID** *(optional)*: Any `weather.*` entity (e.g. `weather.home`).
-- **Alert / Door Contact Entity ID** *(optional)*: A `binary_sensor.*` (e.g. `binary_sensor.front_door`) or a template `sensor.*` listing open doors (hidden automatically when `off`/`closed`/`none`/`ok`/empty).
+- **Alert / Door Contact Entity ID** *(optional)*: A `binary_sensor.*` (e.g. `binary_sensor.front_door`) or a template `sensor.*` listing open doors (hidden automatically when `off`/`closed`/`none`/`ok`/empty). Leave this blank globally if you only want door alerts on specific radios.
 - **Sensors 1–4**: Enter entity IDs, optional short labels, decimal places, and optional unit overrides.
   - **Slot 1** displays on the **lower-left** (e.g. `sensor.outside_temperature`).
   - **Slot 2** displays on the **lower-right** (e.g. `sensor.indoor_temperature`).
   - **Slots 3 & 4** stack beneath Slots 1 & 2 when configured.
+
+#### Per-Radio Overrides *(optional)*
+
+To customize individual radios while keeping Global Defaults for the rest:
+
+- **Default / Classic LMS Skin**: **Settings → Player → [Select Radio] → Home Assistant Screensaver**
+- **Material Skin**: **Settings → Player Settings → [Radio] → Extra Settings → Home Assistant Screensaver**
+
+Each radio follows three simple rules:
+1. **Leave blank** → inherits the **Global Default** for that item/slot.
+2. **Enter an Entity ID** → overrides that item/slot for this radio only (and lets you override its label, decimals, and unit).
+3. **Enter `none`** → explicitly hides a Global Default on this radio.
+
+You can also pick a per-radio **Clock Font** override or reset all custom overrides on a radio back to Global Defaults in one click. Existing Squeezebox Radios pick up per-radio overrides automatically on their next poll—no applet reinstall needed.
+
+*Example multi-room setup:*
+- **Global Defaults**: Outside temperature (Slot 1), 1st-floor average temperature (Slot 2), Weather (`weather.home`), Alert left blank.
+- **1st-floor radios**: Leave everything blank (inherit Global Defaults automatically).
+- **Kids' rooms (2nd floor)**: Override only **Slot 2** with the room/2nd-floor temperature; Outside temp and Weather keep inheriting, and door alerts stay off.
+- **Your own radio**: Set **Alert** to `sensor.open_doors` (plus override **Slot 2** if upstairs).
 
 ### Step 3: Install the Applet on Your Squeezebox Radio
 
@@ -106,17 +127,17 @@ rest_command:
 ## Local Development & Testing
 
 ```bash
-# Run Perl & Lua 5.1 unit tests (88 automated checks)
+# Run Perl & Lua 5.1 unit tests (169 automated checks)
 ./scripts/test.sh
 
 # Build radio applet zip (dist/HAScreenSaver.zip)
 ./scripts/build.sh
 
 # Build full release artifacts + repo.xml
-./scripts/release.sh 1.0.0 Nornode/lms-ha-screensaver
+./scripts/release.sh 1.1.0 Nornode/lms-ha-screensaver
 ```
 
-For fast local deployment to your own LMS server and a single test radio over SSH, copy `.env.example` to `.env.local` (gitignored) and use `./scripts/deploy-lms.sh`, `./scripts/deploy-radio.sh`, and `./scripts/test-lms-rpc.sh`.
+For fast local deployment to your own LMS server and a single test radio over SSH, copy `.env.example` to `.env.local` (gitignored) and use `./scripts/deploy-lms.sh`, `./scripts/deploy-radio.sh`, and `./scripts/test-lms-rpc.sh` (pass an optional player MAC like `./scripts/test-lms-rpc.sh aa:bb:cc:dd:ee:ff` to inspect a specific radio's resolved sensors).
 
 ---
 

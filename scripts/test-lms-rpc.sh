@@ -12,11 +12,13 @@ fi
 : "${LMS_HOST:?Set LMS_HOST in .env.local or environment (e.g. 192.168.1.10)}"
 LMS_PORT="${LMS_PORT:-9000}"
 BASE_URL="http://${LMS_HOST}:${LMS_PORT}"
+PLAYER_ID="${1:-${LMS_PLAYER_ID:-}}"
+TARGET_DESC="${PLAYER_ID:-global defaults}"
 
-echo "==> 1. Testing live JSON-RPC: hascreensaver sensors"
+echo "==> 1. Testing live JSON-RPC (${TARGET_DESC}): hascreensaver sensors"
 curl -sS -X POST "${BASE_URL}/jsonrpc.js" \
     -H "Content-Type: application/json" \
-    -d '{"id":1,"method":"slim.request","params":["",["hascreensaver","sensors"]]}'
+    -d "{\"id\":1,\"method\":\"slim.request\",\"params\":[\"${PLAYER_ID}\",[\"hascreensaver\",\"sensors\"]]}"
 echo ""
 
 echo "==> 2. Testing self-hosted repo.xml"

@@ -72,6 +72,29 @@
 [% END %]
 
 [% WRAPPER settingSection %]
+	[% WRAPPER settingGroup title="PLUGIN_HASCREENSAVER_PER_RADIO_SECTION" desc="PLUGIN_HASCREENSAVER_PER_RADIO_DESC" %]
+		[% IF players && players.size > 0 %]
+			<table>
+				<tr>
+					<th align="left">[% "PLUGIN_HASCREENSAVER_PLAYER_NAME" | string %]</th>
+					<th align="left">[% "PLUGIN_HASCREENSAVER_PLAYER_MODEL" | string %]</th>
+					<th align="left">[% "PLUGIN_HASCREENSAVER_PLAYER_CONFIG" | string %]</th>
+				</tr>
+				[% FOREACH p IN players %]
+					<tr>
+						<td>[% p.name | html %]</td>
+						<td>[% p.model | html %]</td>
+						<td>[% p.summary | html %]</td>
+					</tr>
+				[% END %]
+			</table>
+		[% ELSE %]
+			<p><em>[% "PLUGIN_HASCREENSAVER_NO_PLAYERS" | string %]</em></p>
+		[% END %]
+	[% END %]
+[% END %]
+
+[% WRAPPER settingSection %]
 	[% WRAPPER settingGroup title="PLUGIN_HASCREENSAVER_REPO_SECTION" desc="PLUGIN_HASCREENSAVER_REPO_DESC" %]
 		<code>[% local_repo_url | html %]</code>
 	[% END %]

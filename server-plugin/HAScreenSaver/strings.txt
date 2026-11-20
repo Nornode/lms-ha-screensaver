@@ -32,34 +32,34 @@ PLUGIN_HASCREENSAVER_FONT_NAME
 	EN	Clock Font
 
 PLUGIN_HASCREENSAVER_FONT_NAME_DESC
-	EN	Font used for the digital clock on Squeezebox Radio.
+	EN	Default font used for the digital clock on Squeezebox Radio (can be overridden per radio).
 
 PLUGIN_HASCREENSAVER_ALERT_SECTION
-	EN	Alert / Door Contact Sensor (optional)
+	EN	Alert / Door Contact Sensor — Global Default (optional)
 
 PLUGIN_HASCREENSAVER_ALERT_ENTITY
 	EN	Alert Entity ID
 
 PLUGIN_HASCREENSAVER_ALERT_ENTITY_DESC
-	EN	Optional binary_sensor or text sensor (e.g. binary_sensor.front_door or a template sensor listing open doors). Hidden automatically when state is off, closed, none, ok, or empty.
+	EN	Optional global default binary_sensor or text sensor (e.g. binary_sensor.front_door or a template sensor listing open doors). Hidden automatically when state is off, closed, none, ok, or empty. Leave blank here to enable door alerts only on specific radios via Player Settings.
 
 PLUGIN_HASCREENSAVER_ALERT_LABEL
 	EN	Alert Prefix Label
 
 PLUGIN_HASCREENSAVER_WEATHER_SECTION
-	EN	Weather Symbol (optional)
+	EN	Weather Symbol — Global Default (optional)
 
 PLUGIN_HASCREENSAVER_WEATHER_ENTITY
 	EN	Weather Entity ID
 
 PLUGIN_HASCREENSAVER_WEATHER_ENTITY_DESC
-	EN	Optional Home Assistant weather entity (e.g. weather.home) to display a weather icon in the bottom center of the screensaver.
+	EN	Optional global default Home Assistant weather entity (e.g. weather.home) to display a weather icon in the bottom center of the screensaver.
 
 PLUGIN_HASCREENSAVER_SENSORS_SECTION
-	EN	Home Assistant Sensors (up to 4)
+	EN	Home Assistant Sensors — Global Defaults (up to 4)
 
 PLUGIN_HASCREENSAVER_SENSORS_DESC
-	EN	Configure 1 to 4 sensors. Leave unused slots blank. The radio adapts its layout automatically (1-2 sensors: single row; 3-4 sensors: 2x2 grid).
+	EN	Configure 1 to 4 default sensors used by any radio without custom overrides. Leave unused slots blank. The radio adapts its layout automatically (1-2 sensors: single row; 3-4 sensors: 2x2 grid).
 
 PLUGIN_HASCREENSAVER_ENTITY_ID
 	EN	Entity ID
@@ -78,3 +78,60 @@ PLUGIN_HASCREENSAVER_REPO_SECTION
 
 PLUGIN_HASCREENSAVER_REPO_DESC
 	EN	Add this URL under Settings &gt; Plugins &gt; Additional Repositories to install the screensaver onto Squeezebox Radios via Applet Installer:
+
+PLUGIN_HASCREENSAVER_PER_RADIO_SECTION
+	EN	Per-Radio Overrides
+
+PLUGIN_HASCREENSAVER_PER_RADIO_DESC
+	EN	Customize individual radios under Settings &gt; Player &gt; [Select Radio] &gt; Home Assistant Screensaver (or in Material Skin: Player Settings &gt; [Radio] &gt; Extra Settings &gt; Home Assistant Screensaver). Any radio without overrides uses the Global Defaults above.
+
+PLUGIN_HASCREENSAVER_PLAYER_NAME
+	EN	Player
+
+PLUGIN_HASCREENSAVER_PLAYER_MODEL
+	EN	Model
+
+PLUGIN_HASCREENSAVER_PLAYER_CONFIG
+	EN	Active Configuration
+
+PLUGIN_HASCREENSAVER_NO_PLAYERS
+	EN	No players currently connected.
+
+PLUGIN_HASCREENSAVER_PLAYER_INTRO
+	EN	Per-Radio Screensaver Overrides
+
+PLUGIN_HASCREENSAVER_PLAYER_INTRO_DESC
+	EN	Customize what this radio displays. Leave any Entity ID blank to inherit the Global Default, enter an Entity ID to override that slot for this radio only, or enter "none" to hide a Global Default on this radio.
+
+PLUGIN_HASCREENSAVER_PLAYER_STATUS
+	EN	Active Overrides
+
+PLUGIN_HASCREENSAVER_PLAYER_FONT_DESC
+	EN	Optionally override the clock font for this radio, or use the Global Default.
+
+PLUGIN_HASCREENSAVER_USE_GLOBAL_DEFAULT
+	EN	Use Global Default
+
+PLUGIN_HASCREENSAVER_PLAYER_WEATHER_DESC
+	EN	Leave blank to inherit the Global Default weather entity, enter a weather.* entity to override, or enter "none" to hide weather on this radio.
+
+PLUGIN_HASCREENSAVER_PLAYER_ALERT_DESC
+	EN	Leave blank to inherit the Global Default alert, enter an entity ID (e.g. sensor.open_doors) to enable or override alerts on this radio, or enter "none" to hide a Global Default alert.
+
+PLUGIN_HASCREENSAVER_PLAYER_SENSORS_DESC
+	EN	Leave a row blank to inherit that Global Default slot, enter an Entity ID to override that slot for this radio, or enter "none" to hide that Global Default slot.
+
+PLUGIN_HASCREENSAVER_GLOBAL_DEFAULT_LABEL
+	EN	Global default
+
+PLUGIN_HASCREENSAVER_NOT_SET
+	EN	not set
+
+PLUGIN_HASCREENSAVER_PLAYER_RESET_SECTION
+	EN	Reset Overrides
+
+PLUGIN_HASCREENSAVER_PLAYER_RESET_DESC
+	EN	Clear all custom settings on this radio so it returns to Global Defaults.
+
+PLUGIN_HASCREENSAVER_PLAYER_RESET_LABEL
+	EN	Reset all overrides on this radio back to Global Defaults on Apply
