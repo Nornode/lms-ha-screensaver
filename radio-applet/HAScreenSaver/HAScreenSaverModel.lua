@@ -1,0 +1,209 @@
+-- Pure Lua 5.1 helper functions for HAScreenSaver (unit-testable outside Jive)
+
+local M = {}
+
+M.DEFAULT_POLL_INTERVAL_MS = 60000
+M.MIN_POLL_INTERVAL_MS     = 10000
+M.MAX_POLL_INTERVAL_MS     = 300000
+M.STALE_MULTIPLIER         = 2.5
+
+M.FONT_FILES = {
+    FreeSansBold  = "fonts/FreeSansBold.ttf",
+    FreeSans      = "fonts/FreeSans.ttf",
+    FreeMonoBold  = "fonts/FreeMonoBold.ttf",
+    FreeSerifBold = "fonts/FreeSerifBold.ttf",
+}
+
+M.WEATHER_ICONS = {
+    sunny        = "applets/HAScreenSaver/icons/weather_sunny.png",
+    clear_night  = "applets/HAScreenSaver/icons/weather_clear_night.png",
+    partlycloudy = "applets/HAScreenSaver/icons/weather_partlycloudy.png",
+    cloudy       = "applets/HAScreenSaver/icons/weather_cloudy.png",
+    rainy        = "applets/HAScreenSaver/icons/weather_rainy.png",
+    pouring      = "applets/HAScreenSaver/icons/weather_pouring.png",
+    snowy        = "applets/HAScreenSaver/icons/weather_snowy.png",
+    fog          = "applets/HAScreenSaver/icons/weather_fog.png",
+    lightning    = "applets/HAScreenSaver/icons/weather_lightning.png",
+    windy        = "applets/HAScreenSaver/icons/weather_windy.png",
+}
+
+function M.newState()
+    return {
+        pollIntervalMs = M.DEFAULT_POLL_INTERVAL_MS,
+        fontName       = "FreeSansBold",
+        alarmActive    = false,
+        alarmTime      = "",
+        weatherIcon    = "",
+        alertActive    = false,
+        alertText      = "",
+        sensors        = {},
+        lastSuccessMs  = nil,
+    }
+end
+
+function M.resolveFontPath(fontName)
+    if type(fontName) == "string" and M.FONT_FILES[fontName] then
+        return M.FONT_FILES[fontName]
+    end
+    return M.FONT_FILES.FreeSansBold
+end
+
+function M.resolveWeatherIconPath(iconKey)
+    if type(iconKey) == "string" and M.WEATHER_ICONS[iconKey] then
+        return M.WEATHER_ICONS[iconKey]
+    end
+    return nil
+end
+
+function M.formatTime(hour24, min, is12Hour)
+    local h = tonumber(hour24) or 0
+    local m = tonumber(min) or 0
+    if is12Hour then
+        local h12 = h % 12
+        if h12 == 0 then
+            h12 = 12
+        end
+        return string.format("%d:%02d", h12, m)
+    end
+    return string.format("%02d:%02d", h, m)
+end
+
+function M.applyServerPayload(state, data, nowMs)
+    if type(data) ~= "table" then
+        return state
+    end
+
+    local intervalSec = tonumber(data.poll_interval)
+    if intervalSec then
+        local ms = math.floor(intervalSec * 1000)
+        if ms < M.MIN_POLL_INTERVAL_MS then ms = M.MIN_POLL_INTERVAL_MS end
+        if ms > M.MAX_POLL_INTERVAL_MS then ms = M.MAX_POLL_INTERVAL_MS end
+        state.pollIntervalMs = ms
+    end
+
+    if type(data.font_name) == "string" and M.FONT_FILES[data.font_name] then
+        state.fontName = data.font_name
+    end
+
+    state.alarmActive = (tonumber(data.alarm_active) == 1) or (data.alarm_active == true)
+    state.alarmTime   = (type(data.alarm_time) == "string") and data.alarm_time or ""
+
+    if type(data.weather_icon) == "string" and M.WEATHER_ICONS[data.weather_icon] then
+        state.weatherIcon = data.weather_icon
+    else
+        state.weatherIcon = ""
+    end
+
+    state.alertActive = (tonumber(data.alert_active) == 1) or (data.alert_active == true)
+    state.alertText   = (type(data.alert_text) == "string") and data.alert_text or ""
+
+    local parsed = {}
+    if type(data.sensors_loop) == "table" then
+        local count = #data.sensors_loop
+        if count > 4 then count = 4 end
+        for i = 1, count do
+            local item = data.sensors_loop[i]
+            if type(item) == "table" then
+                parsed[#parsed + 1] = {
+                    label = (type(item.label) == "string") and item.label or "",
+                    value = (type(item.value) == "string") and item.value or "--",
+                    unit  = (type(item.unit) == "string") and item.unit or "",
+                    ok    = (tonumber(item.ok) == 1) or (item.ok == true),
+                }
+            end
+        end
+    end
+
+    state.sensors       = parsed
+    state.lastSuccessMs = nowMs
+    return state
+end
+
+function M.expireIfStale(state, nowMs)
+    if not state.lastSuccessMs or not nowMs then
+        return false
+    end
+
+    local ageMs = nowMs - state.lastSuccessMs
+    local maxAgeMs = state.pollIntervalMs * M.STALE_MULTIPLIER
+    if ageMs <= maxAgeMs then
+        return false
+    end
+
+    local changed = false
+    for i = 1, #state.sensors do
+        if state.sensors[i].value ~= "--" or state.sensors[i].ok then
+            state.sensors[i].value = "--"
+            state.sensors[i].ok    = false
+            changed = true
+        end
+    end
+    if state.weatherIcon ~= "" then
+        state.weatherIcon = ""
+        changed = true
+    end
+    if state.alertActive or state.alertText ~= "" then
+        state.alertActive = false
+        state.alertText   = ""
+        changed = true
+    end
+    return changed
+end
+
+function M.formatSensorDisplay(sensor)
+    if type(sensor) ~= "table" then
+        return "--"
+    end
+    local val  = sensor.value or "--"
+    local unit = sensor.unit or ""
+    if val == "--" or unit == "" then
+        return val
+    end
+    return val .. unit
+end
+
+function M.computeLayout(screenW, screenH, sensorCount, hasTopBar, hasWeather)
+    local w = screenW or 320
+    local h = screenH or 240
+    local n = sensorCount or 0
+    if n > 4 then n = 4 end
+
+    local hasBottom = (n > 0) or (hasWeather == true)
+    local topBarH = hasTopBar and 28 or 10
+    local layout = {
+        screenW    = w,
+        screenH    = h,
+        topBarH    = topBarH,
+        hasBottom  = hasBottom,
+        sensorRows = 0,
+        sensorCols = 0,
+    }
+
+    if not hasBottom then
+        layout.clockFontSize = math.floor(h * 0.44)
+        layout.clockCenterY  = math.floor((h + topBarH) / 2) - math.floor(h * 0.04)
+        layout.bottomBandY   = nil
+    elseif n <= 2 then
+        layout.sensorRows    = (n > 0) and 1 or 0
+        layout.sensorCols    = n
+        layout.bottomBandY   = math.floor(h * 0.70)
+        layout.clockFontSize = math.floor(h * 0.40)
+        layout.clockCenterY  = math.floor((topBarH + layout.bottomBandY) / 2) - math.floor(h * 0.05)
+        layout.labelFontSize = 11
+        layout.valueFontSize = 28
+        layout.unitFontSize  = 14
+    else
+        layout.sensorRows    = 2
+        layout.sensorCols    = 2
+        layout.bottomBandY   = math.floor(h * 0.56)
+        layout.clockFontSize = math.floor(h * 0.32)
+        layout.clockCenterY  = math.floor((topBarH + layout.bottomBandY) / 2) - math.floor(h * 0.04)
+        layout.labelFontSize = 10
+        layout.valueFontSize = 20
+        layout.unitFontSize  = 12
+    end
+
+    return layout
+end
+
+return M

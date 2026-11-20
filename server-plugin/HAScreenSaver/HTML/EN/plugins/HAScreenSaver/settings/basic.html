@@ -1,0 +1,80 @@
+[% PROCESS settings/header.html %]
+
+[% WRAPPER settingSection %]
+	[% WRAPPER settingGroup title="PLUGIN_HASCREENSAVER_CONNECTION" desc="PLUGIN_HASCREENSAVER_HA_URL_DESC" %]
+		<p><strong>Active Mode:</strong> [% ha_mode | html %]</p>
+		<label for="pref_ha_url">[% "PLUGIN_HASCREENSAVER_HA_URL" | string %]</label><br/>
+		<input type="text" class="stdedit" name="pref_ha_url" id="pref_ha_url" value="[% prefs.ha_url | html %]" size="50" placeholder="http://homeassistant.local:8123" />
+	[% END %]
+
+	[% WRAPPER settingGroup title="PLUGIN_HASCREENSAVER_HA_TOKEN" desc="PLUGIN_HASCREENSAVER_HA_TOKEN_DESC" %]
+		<input type="password" class="stdedit" name="pref_ha_token" id="pref_ha_token" value="[% prefs.ha_token | html %]" size="50" autocomplete="off" />
+	[% END %]
+[% END %]
+
+[% WRAPPER settingSection %]
+	[% WRAPPER settingGroup title="PLUGIN_HASCREENSAVER_POLL_INTERVAL" desc="PLUGIN_HASCREENSAVER_POLL_INTERVAL_DESC" %]
+		<input type="text" class="stdedit" name="pref_poll_interval" id="pref_poll_interval" value="[% prefs.poll_interval | html %]" size="6" />
+	[% END %]
+
+	[% WRAPPER settingGroup title="PLUGIN_HASCREENSAVER_FONT_NAME" desc="PLUGIN_HASCREENSAVER_FONT_NAME_DESC" %]
+		<select class="stdedit" name="pref_font_name" id="pref_font_name">
+			<option value="FreeSansBold" [% IF prefs.font_name == 'FreeSansBold' %]selected[% END %]>FreeSans Bold (Default)</option>
+			<option value="FreeSans" [% IF prefs.font_name == 'FreeSans' %]selected[% END %]>FreeSans Regular</option>
+			<option value="FreeMonoBold" [% IF prefs.font_name == 'FreeMonoBold' %]selected[% END %]>FreeMono Bold (Tabular)</option>
+			<option value="FreeSerifBold" [% IF prefs.font_name == 'FreeSerifBold' %]selected[% END %]>FreeSerif Bold (Classic)</option>
+		</select>
+	[% END %]
+[% END %]
+
+[% WRAPPER settingSection %]
+	[% WRAPPER settingGroup title="PLUGIN_HASCREENSAVER_WEATHER_SECTION" desc="PLUGIN_HASCREENSAVER_WEATHER_ENTITY_DESC" %]
+		<label for="pref_weather_entity">[% "PLUGIN_HASCREENSAVER_WEATHER_ENTITY" | string %]:</label>
+		<input type="text" class="stdedit" name="pref_weather_entity" id="pref_weather_entity" value="[% prefs.weather_entity | html %]" size="40" placeholder="weather.home" />
+	[% END %]
+[% END %]
+
+[% WRAPPER settingSection %]
+	[% WRAPPER settingGroup title="PLUGIN_HASCREENSAVER_ALERT_SECTION" desc="PLUGIN_HASCREENSAVER_ALERT_ENTITY_DESC" %]
+		<label for="pref_alert_entity">[% "PLUGIN_HASCREENSAVER_ALERT_ENTITY" | string %]:</label>
+		<input type="text" class="stdedit" name="pref_alert_entity" id="pref_alert_entity" value="[% prefs.alert_entity | html %]" size="40" placeholder="binary_sensor.front_door" />
+		&nbsp;
+		<label for="pref_alert_label">[% "PLUGIN_HASCREENSAVER_ALERT_LABEL" | string %]:</label>
+		<input type="text" class="stdedit" name="pref_alert_label" id="pref_alert_label" value="[% prefs.alert_label | html %]" size="16" placeholder="Open" />
+	[% END %]
+[% END %]
+
+[% WRAPPER settingSection %]
+	[% WRAPPER settingGroup title="PLUGIN_HASCREENSAVER_SENSORS_SECTION" desc="PLUGIN_HASCREENSAVER_SENSORS_DESC" %]
+		<table>
+			<tr>
+				<th>#</th>
+				<th>[% "PLUGIN_HASCREENSAVER_ENTITY_ID" | string %]</th>
+				<th>[% "PLUGIN_HASCREENSAVER_LABEL" | string %]</th>
+				<th>[% "PLUGIN_HASCREENSAVER_DECIMALS" | string %]</th>
+				<th>[% "PLUGIN_HASCREENSAVER_UNIT" | string %]</th>
+			</tr>
+			[% FOREACH idx IN [1, 2, 3, 4] %]
+				[% SET ekey = "sensor" _ idx _ "_entity" %]
+				[% SET lkey = "sensor" _ idx _ "_label" %]
+				[% SET dkey = "sensor" _ idx _ "_decimals" %]
+				[% SET ukey = "sensor" _ idx _ "_unit" %]
+				<tr>
+					<td>[% idx %]</td>
+					<td><input type="text" class="stdedit" name="pref_[% ekey %]" value="[% prefs.$ekey | html %]" size="36" placeholder="sensor.outside_temperature" /></td>
+					<td><input type="text" class="stdedit" name="pref_[% lkey %]" value="[% prefs.$lkey | html %]" size="12" placeholder="Out" /></td>
+					<td><input type="text" class="stdedit" name="pref_[% dkey %]" value="[% prefs.$dkey | html %]" size="3" placeholder="1" /></td>
+					<td><input type="text" class="stdedit" name="pref_[% ukey %]" value="[% prefs.$ukey | html %]" size="6" placeholder="°C" /></td>
+				</tr>
+			[% END %]
+		</table>
+	[% END %]
+[% END %]
+
+[% WRAPPER settingSection %]
+	[% WRAPPER settingGroup title="PLUGIN_HASCREENSAVER_REPO_SECTION" desc="PLUGIN_HASCREENSAVER_REPO_DESC" %]
+		<code>[% local_repo_url | html %]</code>
+	[% END %]
+[% END %]
+
+[% PROCESS settings/footer.html %]

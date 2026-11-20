@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<extension>
+  <name>PLUGIN_HASCREENSAVER</name>
+  <module>Plugins::HAScreenSaver::Plugin</module>
+  <version>1.0.0</version>
+  <description>PLUGIN_HASCREENSAVER_DESC</description>
+  <creator>Nornode</creator>
+  <defaultState>enabled</defaultState>
+  <homepageURL>https://github.com/Nornode/lms-ha-screensaver</homepageURL>
+  <optionsURL>plugins/HAScreenSaver/settings/basic.html</optionsURL>
+  <type>2</type>
+  <targetApplication>
+    <id>SlimServer</id>
+    <minVersion>8.0</minVersion>
+    <maxVersion>*</maxVersion>
+  </targetApplication>
+</extension>

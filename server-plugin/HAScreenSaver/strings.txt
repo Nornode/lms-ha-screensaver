@@ -1,0 +1,80 @@
+PLUGIN_HASCREENSAVER
+	EN	Home Assistant Screensaver
+
+PLUGIN_HASCREENSAVER_DESC
+	EN	Stateless live proxy serving Home Assistant sensor states and radio alarm status to the HA Screensaver Squeezebox Radio applet, with zero long-term caching.
+
+PLUGIN_HASCREENSAVER_CONNECTION
+	EN	Home Assistant Connection
+
+PLUGIN_HASCREENSAVER_HA_URL
+	EN	Home Assistant URL (optional)
+
+PLUGIN_HASCREENSAVER_HA_URL_DESC
+	EN	Leave blank to auto-connect via the Home Assistant Supervisor API when LMS runs as an HA Add-on. Otherwise enter e.g. http://homeassistant.local:8123
+
+PLUGIN_HASCREENSAVER_HA_TOKEN
+	EN	Long-Lived Access Token (optional)
+
+PLUGIN_HASCREENSAVER_HA_TOKEN_DESC
+	EN	Leave blank when using the Home Assistant Supervisor API. Required only when a custom Home Assistant URL is set above.
+
+PLUGIN_HASCREENSAVER_DISPLAY
+	EN	Display &amp; Polling
+
+PLUGIN_HASCREENSAVER_POLL_INTERVAL
+	EN	Update Interval (seconds)
+
+PLUGIN_HASCREENSAVER_POLL_INTERVAL_DESC
+	EN	How often active screensavers request fresh sensor states (10-300 seconds, default 60). No sensor values are cached long term on LMS or the radio.
+
+PLUGIN_HASCREENSAVER_FONT_NAME
+	EN	Clock Font
+
+PLUGIN_HASCREENSAVER_FONT_NAME_DESC
+	EN	Font used for the digital clock on Squeezebox Radio.
+
+PLUGIN_HASCREENSAVER_ALERT_SECTION
+	EN	Alert / Door Contact Sensor (optional)
+
+PLUGIN_HASCREENSAVER_ALERT_ENTITY
+	EN	Alert Entity ID
+
+PLUGIN_HASCREENSAVER_ALERT_ENTITY_DESC
+	EN	Optional binary_sensor or text sensor (e.g. binary_sensor.front_door or a template sensor listing open doors). Hidden automatically when state is off, closed, none, ok, or empty.
+
+PLUGIN_HASCREENSAVER_ALERT_LABEL
+	EN	Alert Prefix Label
+
+PLUGIN_HASCREENSAVER_WEATHER_SECTION
+	EN	Weather Symbol (optional)
+
+PLUGIN_HASCREENSAVER_WEATHER_ENTITY
+	EN	Weather Entity ID
+
+PLUGIN_HASCREENSAVER_WEATHER_ENTITY_DESC
+	EN	Optional Home Assistant weather entity (e.g. weather.home) to display a weather icon in the bottom center of the screensaver.
+
+PLUGIN_HASCREENSAVER_SENSORS_SECTION
+	EN	Home Assistant Sensors (up to 4)
+
+PLUGIN_HASCREENSAVER_SENSORS_DESC
+	EN	Configure 1 to 4 sensors. Leave unused slots blank. The radio adapts its layout automatically (1-2 sensors: single row; 3-4 sensors: 2x2 grid).
+
+PLUGIN_HASCREENSAVER_ENTITY_ID
+	EN	Entity ID
+
+PLUGIN_HASCREENSAVER_LABEL
+	EN	Short Label
+
+PLUGIN_HASCREENSAVER_DECIMALS
+	EN	Decimals
+
+PLUGIN_HASCREENSAVER_UNIT
+	EN	Unit Override
+
+PLUGIN_HASCREENSAVER_REPO_SECTION
+	EN	Local Radio Applet Repository
+
+PLUGIN_HASCREENSAVER_REPO_DESC
+	EN	Add this URL under Settings &gt; Plugins &gt; Additional Repositories to install the screensaver onto Squeezebox Radios via Applet Installer:

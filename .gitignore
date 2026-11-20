@@ -1,0 +1,18 @@
+# Local environment & deployment secrets (NEVER commit)
+.env
+.env.local
+*.local
+deploy.local.conf
+
+# Build artifacts
+dist/
+server-plugin/HAScreenSaver/AppletDist/*.zip
+server-plugin/HAScreenSaver/AppletDist/*.sha1
+
+# macOS / Editor
+.DS_Store
+*.swp
+*.swo
+*~
+.vscode/
+.idea/

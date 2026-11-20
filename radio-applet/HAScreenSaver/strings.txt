@@ -1,0 +1,5 @@
+HA_SCREENSAVER
+	EN	Home Assistant Clock
+
+HA_SCREENSAVER_DESC
+	EN	Clear digital clock with radio alarm indicator, optional door/alert banner, and live Home Assistant sensors.
