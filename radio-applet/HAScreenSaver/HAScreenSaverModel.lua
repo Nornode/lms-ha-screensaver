@@ -168,15 +168,44 @@ function M.computeLayout(screenW, screenH, sensorCount, hasTopBar, hasWeather)
     local n = sensorCount or 0
     if n > 4 then n = 4 end
 
+    local scale = math.min(w / 320, h / 240)
+    if scale <= 0 then scale = 1 end
+    local function S(px)
+        return math.floor(px * scale + 0.5)
+    end
+
     local hasBottom = (n > 0) or (hasWeather == true)
-    local topBarH = hasTopBar and 28 or 10
+    local topBarH = hasTopBar and math.max(14, S(28)) or math.max(4, S(10))
     local layout = {
-        screenW    = w,
-        screenH    = h,
-        topBarH    = topBarH,
-        hasBottom  = hasBottom,
-        sensorRows = 0,
-        sensorCols = 0,
+        screenW         = w,
+        screenH         = h,
+        scale           = scale,
+        topBarH         = topBarH,
+        hasBottom       = hasBottom,
+        sensorRows      = 0,
+        sensorCols      = 0,
+        uiFontSize      = math.max(8, S(12)),
+        sidePad         = math.max(4, S(12)),
+        shadowOffset    = math.max(2, S(2)),
+        dividerH        = math.max(1, S(1)),
+        dividerInset    = math.max(4, S(10)),
+        areaPad         = math.max(2, S(4)),
+        weatherPad      = math.max(4, S(12)),
+        alarmRightPad   = math.max(4, S(8)),
+        alarmTopY       = math.max(2, S(6)),
+        alarmIconGap    = math.max(2, S(4)),
+        alarmReservePad = math.max(6, S(14)),
+        pillX           = math.max(3, S(6)),
+        pillY           = math.max(2, S(4)),
+        pillPadX        = math.max(6, S(12)),
+        pillPadY        = math.max(3, S(6)),
+        pillMinH        = math.max(12, S(20)),
+        pillIconGap     = math.max(2, S(4)),
+        cellUnitGap     = math.max(1, S(2)),
+        cellUnitReserve = math.max(2, S(3)),
+        cellUnitYOffset = math.max(1, S(3)),
+        cellLabelGap    = math.max(1, S(1)),
+        cellMinValW     = math.max(12, S(24)),
     }
 
     if not hasBottom then
@@ -189,18 +218,27 @@ function M.computeLayout(screenW, screenH, sensorCount, hasTopBar, hasWeather)
         layout.bottomBandY   = math.floor(h * 0.70)
         layout.clockFontSize = math.floor(h * 0.40)
         layout.clockCenterY  = math.floor((topBarH + layout.bottomBandY) / 2) - math.floor(h * 0.05)
-        layout.labelFontSize = 11
-        layout.valueFontSize = 28
-        layout.unitFontSize  = 14
+        layout.labelFontSize = math.max(8, S(11))
+        layout.valueFontSize = math.max(12, S(28))
+        layout.unitFontSize  = math.max(9, S(14))
+    elseif (w / h) >= 1.65 then
+        layout.sensorRows    = 1
+        layout.sensorCols    = n
+        layout.bottomBandY   = math.floor(h * 0.70)
+        layout.clockFontSize = math.floor(h * 0.40)
+        layout.clockCenterY  = math.floor((topBarH + layout.bottomBandY) / 2) - math.floor(h * 0.05)
+        layout.labelFontSize = math.max(8, S(11))
+        layout.valueFontSize = math.max(12, S(24))
+        layout.unitFontSize  = math.max(9, S(13))
     else
         layout.sensorRows    = 2
         layout.sensorCols    = 2
         layout.bottomBandY   = math.floor(h * 0.56)
         layout.clockFontSize = math.floor(h * 0.32)
         layout.clockCenterY  = math.floor((topBarH + layout.bottomBandY) / 2) - math.floor(h * 0.04)
-        layout.labelFontSize = 10
-        layout.valueFontSize = 20
-        layout.unitFontSize  = 12
+        layout.labelFontSize = math.max(8, S(10))
+        layout.valueFontSize = math.max(12, S(20))
+        layout.unitFontSize  = math.max(9, S(12))
     end
 
     return layout

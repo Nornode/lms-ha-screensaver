@@ -4,7 +4,7 @@
 [![Release](https://img.shields.io/github/v/release/Nornode/lms-ha-screensaver)](https://github.com/Nornode/lms-ha-screensaver/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
-A clean, glanceable **digital clock screensaver for Logitech Squeezebox Radio & UE Smart Radio** (SqueezePlay / SqueezeOS `baby`, 320×240 QVGA) powered by a stateless **Lyrion Music Server (LMS 8.x / 9.x)** plugin that proxies live **Home Assistant** sensor data, weather conditions, and door/alert statuses with **zero long-term caching**.
+A clean, glanceable **digital clock screensaver for Logitech Squeezebox Radio (`baby`, 320×240), Squeezebox Touch (`fab4`, 480×272 / 420×272), and Jivelite** powered by a stateless **Lyrion Music Server (LMS 8.x / 9.x)** plugin that proxies live **Home Assistant** sensor data, weather conditions, and door/alert statuses with **zero long-term caching**.
 
 Designed for room-distance readability on 2.4" Squeezebox Radio displays—large crisp time on a dark shaded gradient background, bottom-center weather icon, lower-left and lower-right temperatures with prominent digits and subtle labels/units, a muted radio alarm indicator, and an optional door-open alert pill that stays hidden when everything is closed.
 
@@ -98,12 +98,12 @@ You can also pick a per-radio **Clock Font** override or reset all custom overri
 - **Kids' rooms (2nd floor)**: Override only **Slot 2** with the room/2nd-floor temperature; Outside temp and Weather keep inheriting, and door alerts stay off.
 - **Your own radio**: Set **Alert** to `sensor.open_doors` (plus override **Slot 2** if upstairs).
 
-### Step 3: Install the Applet on Your Squeezebox Radio
+### Step 3: Install the Applet on Your Squeezebox Radio, Touch, or Jivelite
 
-Once the LMS plugin is enabled, it automatically advertises **Home Assistant Clock** to all connected Squeezebox Radios over plain local HTTP (no extra repository URL or HTTPS required):
+Once the LMS plugin is enabled, it automatically advertises **Home Assistant Clock** to connected Squeezebox Radios (`baby`), Squeezebox Touch (`fab4`), and Jivelite clients over plain local HTTP (no extra repository URL or HTTPS required):
 
-1. On your Squeezebox Radio / UE Smart Radio, open **Settings → Advanced → Applet Installer**.
-2. Select **Home Assistant Clock** → **Install** (the radio downloads the `.zip` directly from your local LMS server over plain HTTP, verifies its SHA-1, installs, and restarts).
+1. On your Squeezebox Radio, Squeezebox Touch, or Jivelite, open **Settings → Advanced → Applet Installer**.
+2. Select **Home Assistant Clock** → **Install** (the client downloads the `.zip` directly from your local LMS server over plain HTTP, verifies its SHA-1, installs, and restarts).
 3. Enable it under **Settings → Screen → Screensavers** (*When Off*, *When Stopped*, and/or *When Playing*).
 
 *(Tip: The LMS plugin also self-hosts a standalone XML manifest at `http://<YOUR_LMS_HOST>:9000/plugins/HAScreenSaver/repo.xml` if you ever need to inspect it manually.)*

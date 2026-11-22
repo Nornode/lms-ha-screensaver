@@ -305,7 +305,7 @@ is(Plugins::HAScreenSaver::Plugin::formatWeatherIcon({ state => 'unknown' }),   
 # 5. Test buildRepoXml
 {
     my $xml = Plugins::HAScreenSaver::Plugin::buildRepoXml('192.0.2.10:9000', '0.1.0', 'abc123');
-    like($xml, qr/target="baby\|fab4\|jive\|squeezeplay"/, 'repo.xml targets baby (Squeezebox Radio)');
+    like($xml, qr/target="baby\|fab4\|jive\|squeezeplay\|jivelite"/, 'repo.xml targets baby, fab4 (Touch), and jivelite');
     like($xml, qr/url="http:\/\/192\.0\.2\.10:9000\/plugins\/HAScreenSaver\/HAScreenSaver\.zip"/, 'repo.xml uses dynamic host URL');
     like($xml, qr/sha="abc123"/, 'repo.xml includes SHA-1');
 }
@@ -713,6 +713,18 @@ is(Plugins::HAScreenSaver::Plugin::formatWeatherIcon({ state => 'unknown' }),   
         pt     => [],
     });
     is(scalar(@$nonAppletRes), 0, 'getJiveExtensions returns empty for non-applet type');
+
+    # fab4 (Squeezebox Touch) and jivelite targets return applet
+    for my $t (qw(fab4 jivelite Jivelite)) {
+        my $tRes;
+        Plugins::HAScreenSaver::Plugin::getJiveExtensions({
+            type   => 'applet',
+            target => $t,
+            cb     => sub { $tRes = $_[0]; },
+            pt     => [],
+        });
+        is(scalar(@$tRes), 1, "getJiveExtensions returns 1 applet entry for $t");
+    }
 
     # Unsupported target returns empty
     my $badTargetRes;

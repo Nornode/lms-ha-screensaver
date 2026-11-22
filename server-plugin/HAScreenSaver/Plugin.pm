@@ -17,7 +17,7 @@ use Slim::Utils::Log;
 use Slim::Utils::Prefs;
 use Slim::Web::Pages;
 
-our $VERSION = '1.2.1';
+our $VERSION = '1.3.0';
 
 my $log = Slim::Utils::Log->addLogCategory({
     category     => 'plugin.hascreensaver',
@@ -662,7 +662,7 @@ sub getJiveExtensions {
     my $type   = $args->{type}   || '';
     my $target = $args->{target} || '';
 
-    if ($type eq 'applet' && ($target eq '' || $target =~ /^(?:baby|fab4|jive|squeezeplay)$/)) {
+    if ($type eq 'applet' && ($target eq '' || $target =~ /^(?:baby|fab4|jive|squeezeplay|jivelite)$/i)) {
         my $sha1 = _appletZipSha1();
         if (defined $sha1) {
             my $serverUrl = eval {
@@ -674,7 +674,7 @@ sub getJiveExtensions {
             push @res, {
                 name    => 'HAScreenSaver',
                 title   => 'Home Assistant Clock',
-                desc    => 'Dark-shaded digital clock screensaver for Squeezebox Radio with bottom-center weather icon, up to 4 live Home Assistant sensors, subtle radio alarm indicator, and optional door/alert banner. Zero long-term caching.',
+                desc    => 'Dark-shaded digital clock screensaver for Squeezebox Radio, Squeezebox Touch, and Jivelite with bottom-center weather icon, up to 4 live Home Assistant sensors, subtle radio alarm indicator, and optional door/alert banner. Zero long-term caching.',
                 creator => 'Nornode',
                 link    => 'https://github.com/Nornode/lms-ha-screensaver',
                 version => $VERSION,
@@ -708,12 +708,12 @@ sub buildRepoXml {
             creator="Nornode"
             minTarget="7.7"
             maxTarget="*"
-            target="baby|fab4|jive|squeezeplay"
+            target="baby|fab4|jive|squeezeplay|jivelite"
             version="$version"
             url="$zipUrl"
             sha="$sha1">
       <title lang="EN">Home Assistant Clock</title>
-      <desc lang="EN">Clear digital clock screensaver with radio alarm indicator, optional door/alert banner, and up to 4 live Home Assistant sensors.</desc>
+      <desc lang="EN">Clear digital clock screensaver for Squeezebox Radio, Squeezebox Touch, and Jivelite with alarm indicator, optional door/alert banner, and up to 4 live Home Assistant sensors.</desc>
     </applet>
   </applets>
 </extensions>
