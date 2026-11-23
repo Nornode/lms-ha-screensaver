@@ -6,11 +6,20 @@
 
 A clean, glanceable **digital clock screensaver for Logitech Squeezebox Radio (`baby`, 320×240), Squeezebox Touch (`fab4`, 480×272 / 420×272), and Jivelite** powered by a stateless **Lyrion Music Server (LMS 8.x / 9.x)** plugin that proxies live **Home Assistant** sensor data, weather conditions, and door/alert statuses with **zero long-term caching**.
 
-Designed for room-distance readability on 2.4" Squeezebox Radio displays—large crisp time on a dark shaded gradient background, bottom-center weather icon, lower-left and lower-right temperatures with prominent digits and subtle labels/units, a muted radio alarm indicator, and an optional door-open alert pill that stays hidden when everything is closed.
+Designed for room-distance readability on 2.4" Squeezebox Radio displays—large crisp time on a dark shaded gradient background, bottom-center weather icon, up to 4 live Home Assistant numeric or localized binary/categorical sensors (temperatures, doors, windows, locks, chargers, presence, etc.), a muted radio alarm indicator, and an optional door-open alert pill that stays hidden when everything is closed.
 
-<p align="center">
-  <img src="docs/screenshot.png" alt="Home Assistant Clock screensaver running on a 320x240 Logitech Squeezebox Radio" width="320" height="240" />
-</p>
+<table>
+  <tr>
+    <td align="center">
+      <img src="docs/screenshot.png" alt="2-sensor layout on a 320x240 Logitech Squeezebox Radio" width="320" height="240" /><br/>
+      <em>2-sensor layout (Outside &amp; Indoor temperatures)</em>
+    </td>
+    <td align="center">
+      <img src="docs/screenshot-4sensors.png" alt="4-sensor layout with numeric temperatures and localized binary sensors (Window: Closed, Car: Unplugged) on a 320x240 Logitech Squeezebox Radio" width="320" height="240" /><br/>
+      <em>4-sensor 2×2 layout (Temperatures + Window &amp; Car plug binary sensors)</em>
+    </td>
+  </tr>
+</table>
 
 ---
 
@@ -39,13 +48,13 @@ Designed for room-distance readability on 2.4" Squeezebox Radio displays—large
 
 ```mermaid
 flowchart LR
-    HA["Home Assistant<br/>REST API /api/states/{entity_id}"]
+    HA["Home Assistant<br/>/api/states/{entity_id}<br/>+ /api/template (state_translated)"]
     LMS["Lyrion Music Server (LMS 8/9)<br/>Plugins::HAScreenSaver (Perl)"]
-    Radio["Squeezebox Radio / UE Smart Radio<br/>320x240 QVGA (Lua 5.1)"]
+    Radio["Squeezebox Radio / Touch / Jivelite<br/>Adaptive QVGA+ (Lua 5.1)"]
 
     Radio -- "Comet JSON-RPC (every 60s while active)<br/>hascreensaver sensors" --> LMS
-    LMS -- "Live Async HTTP GET (cache => 0, no-cache)" --> HA
-    HA -- "Live JSON State" --> LMS
+    LMS -- "Live Async HTTP (cache => 0, no-cache)" --> HA
+    HA -- "Live JSON State & Localized Labels" --> LMS
     LMS -- "Formatted Values (RAM-only)" --> Radio
 ```
 
