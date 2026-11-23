@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-VERSION="${1:-1.5.0}"
+VERSION="${1:-1.5.1}"
 GITHUB_REPO="${2:-Nornode/lms-ha-screensaver}"
 TAG="v${VERSION}"
 DIST_DIR="$ROOT_DIR/dist"
