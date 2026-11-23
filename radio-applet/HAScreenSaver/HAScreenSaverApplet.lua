@@ -352,17 +352,9 @@ function _getIcon(self, path, scale)
 end
 
 function _truncateText(self, font, text, maxWidth)
-    if not text or text == "" then
-        return ""
-    end
-    local s = text
-    while #s > 1 and font:width(s) > maxWidth do
-        s = string.sub(s, 1, #s - 1)
-    end
-    if s ~= text and #s > 3 then
-        s = string.sub(s, 1, #s - 2) .. ".."
-    end
-    return s
+    return Model.truncateUtf8Text(text, maxWidth, function(str)
+        return font:width(str)
+    end)
 end
 
 -- Draw a single sensor cell with large bright value, smaller softer unit, and subtle label

@@ -191,8 +191,32 @@ BEGIN {
         sub get {
             my ($self, $url, %headers) = @_;
             push @REQUESTS, {
+                method  => 'GET',
                 url     => $url,
                 headers => \%headers,
+                params  => $self->{params},
+            };
+            if (exists $MOCK_RESPONSES{$url}) {
+                my $mock = $MOCK_RESPONSES{$url};
+                if ($mock->{error}) {
+                    $self->{ecb}->($self, $mock->{error});
+                } else {
+                    my $resp = bless { content => $mock->{content} }, 'MockHttpResponse';
+                    $self->{cb}->($resp);
+                }
+            } else {
+                $self->{ecb}->($self, '404 Not Found');
+            }
+        }
+        sub post {
+            my ($self, $url, @args) = @_;
+            my $body = pop @args;
+            my %headers = @args;
+            push @REQUESTS, {
+                method  => 'POST',
+                url     => $url,
+                headers => \%headers,
+                body    => $body,
                 params  => $self->{params},
             };
             if (exists $MOCK_RESPONSES{$url}) {
@@ -744,6 +768,145 @@ is(Plugins::HAScreenSaver::Plugin::formatWeatherIcon({ state => 'unknown' }),   
     if ($createdTempZip) {
         unlink $zipPath;
     }
+}
+
+# 12. Test binary_sensor / lock / cover localization helpers & /api/template integration
+{
+    # Entity ID validation (template injection guard)
+    is(Plugins::HAScreenSaver::Plugin::isValidEntityId('binary_sensor.front_door'), 1, 'Valid binary_sensor ID accepted');
+    is(Plugins::HAScreenSaver::Plugin::isValidEntityId('lock.main_door'),           1, 'Valid lock ID accepted');
+    is(Plugins::HAScreenSaver::Plugin::isValidEntityId("sensor.x') }} {{ 1"),       0, 'Template injection entity ID rejected');
+    is(Plugins::HAScreenSaver::Plugin::isValidEntityId('bad_id_without_dot'),       0, 'Entity ID without domain dot rejected');
+
+    # Textual vs numeric detection
+    is(Plugins::HAScreenSaver::Plugin::isTextualSensorState({ state => '21.5' }),        0, 'Numeric state is not textual');
+    is(Plugins::HAScreenSaver::Plugin::isTextualSensorState({ state => 'unavailable' }), 0, 'Unavailable state is not textual');
+    is(Plugins::HAScreenSaver::Plugin::isTextualSensorState({ state => 'on' }),          1, 'Binary "on" state is textual');
+    is(Plugins::HAScreenSaver::Plugin::isTextualSensorState({ state => 'unlocked' }),    1, 'Lock "unlocked" state is textual');
+
+    # Template builder & response parser
+    my $tmpl = Plugins::HAScreenSaver::Plugin::buildStateTranslatedTemplate([
+        'binary_sensor.front_door',
+        "bad') + 1",
+        'lock.patio',
+    ]);
+    is($tmpl, "{{ [state_translated('binary_sensor.front_door'), state_translated('lock.patio')] | tojson }}",
+        'buildStateTranslatedTemplate builds batched tojson template and skips invalid IDs');
+
+    is_deeply(
+        Plugins::HAScreenSaver::Plugin::parseStateTranslatedResponse("[\"\xC3\x96ppen\",\"Ol\xC3\xA5st\"]", 2),
+        ["\x{00D6}ppen", "Ol\x{00E5}st"],
+        'parseStateTranslatedResponse parses valid JSON array'
+    );
+    is(Plugins::HAScreenSaver::Plugin::parseStateTranslatedResponse('["only_one"]', 2), undef,
+        'parseStateTranslatedResponse rejects mismatched array length');
+    is(Plugins::HAScreenSaver::Plugin::parseStateTranslatedResponse('not json', 1), undef,
+        'parseStateTranslatedResponse rejects malformed JSON');
+
+    # Fallback device_class & domain state mapping
+    is(Plugins::HAScreenSaver::Plugin::translateSensorFallback({ state => 'on',  attributes => { device_class => 'door' } }),         'Open',         'door on -> Open');
+    is(Plugins::HAScreenSaver::Plugin::translateSensorFallback({ state => 'off', attributes => { device_class => 'door' } }),         'Closed',       'door off -> Closed');
+    is(Plugins::HAScreenSaver::Plugin::translateSensorFallback({ state => 'on',  attributes => { device_class => 'window' } }),       'Open',         'window on -> Open');
+    is(Plugins::HAScreenSaver::Plugin::translateSensorFallback({ state => 'off', attributes => { device_class => 'garage_door' } }),  'Closed',       'garage_door off -> Closed');
+    is(Plugins::HAScreenSaver::Plugin::translateSensorFallback({ state => 'on',  attributes => { device_class => 'lock' } }),         'Unlocked',     'binary_sensor lock on -> Unlocked (HA inverted)');
+    is(Plugins::HAScreenSaver::Plugin::translateSensorFallback({ state => 'off', attributes => { device_class => 'lock' } }),         'Locked',       'binary_sensor lock off -> Locked (HA inverted)');
+    is(Plugins::HAScreenSaver::Plugin::translateSensorFallback({ state => 'on',  attributes => { device_class => 'motion' } }),       'Detected',     'motion on -> Detected');
+    is(Plugins::HAScreenSaver::Plugin::translateSensorFallback({ state => 'off', attributes => { device_class => 'motion' } }),       'Clear',        'motion off -> Clear');
+    is(Plugins::HAScreenSaver::Plugin::translateSensorFallback({ state => 'on',  attributes => { device_class => 'presence' } }),     'Home',         'presence on -> Home');
+    is(Plugins::HAScreenSaver::Plugin::translateSensorFallback({ state => 'off', attributes => { device_class => 'presence' } }),     'Away',         'presence off -> Away');
+    is(Plugins::HAScreenSaver::Plugin::translateSensorFallback({ state => 'on',  attributes => { device_class => 'moisture' } }),     'Wet',          'moisture on -> Wet');
+    is(Plugins::HAScreenSaver::Plugin::translateSensorFallback({ state => 'off', attributes => { device_class => 'connectivity' } }), 'Disconnected', 'connectivity off -> Disconnected');
+    is(Plugins::HAScreenSaver::Plugin::translateSensorFallback({ state => 'on',  attributes => { device_class => 'battery' } }),      'Low',          'battery on -> Low');
+    is(Plugins::HAScreenSaver::Plugin::translateSensorFallback({ state => 'unlocked' }), 'Unlocked', 'lock.* unlocked -> Unlocked');
+    is(Plugins::HAScreenSaver::Plugin::translateSensorFallback({ state => 'locked' }),   'Locked',   'lock.* locked -> Locked');
+    is(Plugins::HAScreenSaver::Plugin::translateSensorFallback({ state => 'not_home' }), 'Away',     'person.* not_home -> Away');
+
+    # formatSensorState with translated text vs fallback vs untranslated raw on/off
+    my $transDoor = Plugins::HAScreenSaver::Plugin::formatSensorState(
+        { state => 'on', attributes => { device_class => 'door' } },
+        { label => 'Door', decimals => '1', unit => '' },
+        'Öppen'
+    );
+    is($transDoor->{value}, 'Öppen', 'formatSensorState uses HA translated string');
+    is($transDoor->{unit},  '',      'Textual state has empty unit');
+
+    my $rawUntranslated = Plugins::HAScreenSaver::Plugin::formatSensorState(
+        { state => 'on', attributes => { device_class => 'door' } },
+        { label => 'Door', decimals => '1', unit => '' },
+        'on'
+    );
+    is($rawUntranslated->{value}, 'Open', 'Untranslated raw "on" with device_class upgrades via fallback');
+
+    # End-to-end handleSensorsRequest with mixed numeric + binary_sensor + lock
+    my $prefs = Slim::Utils::Prefs::preferences('plugin.hascreensaver');
+    $prefs->set('ha_url',         'http://example.ha:8123');
+    $prefs->set('ha_token',       'test-token');
+    $prefs->set('weather_entity', '');
+    $prefs->set('alert_entity',   '');
+    $prefs->set('sensor1_entity', 'sensor.outside_temperature');
+    $prefs->set('sensor1_label',  'Out');
+    $prefs->set('sensor2_entity', 'binary_sensor.front_door');
+    $prefs->set('sensor2_label',  'Door');
+    $prefs->set('sensor3_entity', 'lock.front_door');
+    $prefs->set('sensor3_label',  'Lock');
+    $prefs->set('sensor4_entity', '');
+
+    %Slim::Networking::SimpleAsyncHTTP::MOCK_RESPONSES = (
+        'http://example.ha:8123/api/states/sensor.outside_temperature' => {
+            content => '{"state":"5.44","attributes":{"unit_of_measurement":"°C"}}',
+        },
+        'http://example.ha:8123/api/states/binary_sensor.front_door' => {
+            content => '{"state":"on","attributes":{"device_class":"door"}}',
+        },
+        'http://example.ha:8123/api/states/lock.front_door' => {
+            content => '{"state":"unlocked","attributes":{}}',
+        },
+        'http://example.ha:8123/api/template' => {
+            content => "[\"\xC3\x96ppen\",\"Ol\xC3\xA5st\"]",
+        },
+    );
+    @Slim::Networking::SimpleAsyncHTTP::REQUESTS = ();
+
+    my %resA;
+    my $doneA = 0;
+    my $reqA = bless { client => undef, results => \%resA, done => \$doneA }, 'MockClientRequest';
+    Plugins::HAScreenSaver::Plugin::handleSensorsRequest($reqA);
+
+    is($doneA, 1, 'Mixed numeric + textual request completed');
+    my @postReqsA = grep { ($_->{method} || '') eq 'POST' } @Slim::Networking::SimpleAsyncHTTP::REQUESTS;
+    is(scalar(@postReqsA), 1, 'Fired exactly 1 batched POST to /api/template');
+    is($postReqsA[0]{params}{cache}, 0, 'POST /api/template explicitly sets cache => 0');
+    is($postReqsA[0]{headers}{'Cache-Control'}, 'no-cache', 'POST /api/template sets Cache-Control: no-cache');
+    is($resA{sensors_loop}[0]{value}, '5.4',   'Numeric slot formatted normally');
+    is($resA{sensors_loop}[1]{value}, "\x{00D6}ppen", 'Binary sensor localized via HA state_translated');
+    is($resA{sensors_loop}[2]{value}, "Ol\x{00E5}st", 'Lock localized via HA state_translated');
+
+    # Case B: /api/template fails -> graceful fallback to English device_class / domain labels
+    $Slim::Networking::SimpleAsyncHTTP::MOCK_RESPONSES{'http://example.ha:8123/api/template'} = {
+        error => '500 Internal Server Error',
+    };
+    @Slim::Networking::SimpleAsyncHTTP::REQUESTS = ();
+    my %resB;
+    my $doneB = 0;
+    my $reqB = bless { client => undef, results => \%resB, done => \$doneB }, 'MockClientRequest';
+    Plugins::HAScreenSaver::Plugin::handleSensorsRequest($reqB);
+
+    is($doneB, 1, 'Fallback request completed when /api/template failed');
+    is($resB{sensors_loop}[1]{value}, 'Open',     'Door binary_sensor falls back to Open');
+    is($resB{sensors_loop}[2]{value}, 'Unlocked', 'Lock falls back to Unlocked');
+
+    # Case C: Numeric-only setup -> 0 POST calls to /api/template
+    $prefs->set('sensor2_entity', '');
+    $prefs->set('sensor3_entity', '');
+    @Slim::Networking::SimpleAsyncHTTP::REQUESTS = ();
+    my %resC;
+    my $doneC = 0;
+    my $reqC = bless { client => undef, results => \%resC, done => \$doneC }, 'MockClientRequest';
+    Plugins::HAScreenSaver::Plugin::handleSensorsRequest($reqC);
+
+    is($doneC, 1, 'Numeric-only request completed');
+    my @postReqsC = grep { ($_->{method} || '') eq 'POST' } @Slim::Networking::SimpleAsyncHTTP::REQUESTS;
+    is(scalar(@postReqsC), 0, 'Numeric-only setup fires 0 POST requests to /api/template');
 }
 
 done_testing();

@@ -17,7 +17,7 @@ use Slim::Utils::Log;
 use Slim::Utils::Prefs;
 use Slim::Web::Pages;
 
-our $VERSION = '1.3.0';
+our $VERSION = '1.4.0';
 
 my $log = Slim::Utils::Log->addLogCategory({
     category     => 'plugin.hascreensaver',
@@ -70,6 +70,61 @@ my %WEATHER_ICON_MAP = (
     'lightning-rainy' => 'lightning',
     'windy'           => 'windy',
     'windy-variant'   => 'windy',
+);
+
+# Fallback English labels for binary_sensor device_class when HA /api/template
+# is unavailable or running HA < 2024.3. Index 0 = 'on', Index 1 = 'off'.
+my %BINARY_DEVICE_CLASS_MAP = (
+    'door'             => ['Open', 'Closed'],
+    'window'           => ['Open', 'Closed'],
+    'garage_door'      => ['Open', 'Closed'],
+    'opening'          => ['Open', 'Closed'],
+    'lock'             => ['Unlocked', 'Locked'],
+    'motion'           => ['Detected', 'Clear'],
+    'occupancy'        => ['Detected', 'Clear'],
+    'smoke'            => ['Detected', 'Clear'],
+    'gas'              => ['Detected', 'Clear'],
+    'co'               => ['Detected', 'Clear'],
+    'sound'            => ['Detected', 'Clear'],
+    'vibration'        => ['Detected', 'Clear'],
+    'tamper'           => ['Detected', 'Clear'],
+    'presence'         => ['Home', 'Away'],
+    'moisture'         => ['Wet', 'Dry'],
+    'battery'          => ['Low', 'Normal'],
+    'battery_charging' => ['Charging', 'Not charging'],
+    'connectivity'     => ['Connected', 'Disconnected'],
+    'plug'             => ['Plugged in', 'Unplugged'],
+    'power'            => ['On', 'Off'],
+    'running'          => ['Running', 'Not running'],
+    'problem'          => ['Problem', 'OK'],
+    'safety'           => ['Unsafe', 'Safe'],
+    'cold'             => ['Cold', 'Normal'],
+    'heat'             => ['Hot', 'Normal'],
+    'light'            => ['Light detected', 'No light'],
+    'moving'           => ['Moving', 'Stopped'],
+    'update'           => ['Update available', 'Up-to-date'],
+);
+
+# Fallback English labels for non-binary domains (lock.*, cover.*, person.*, etc.)
+my %DOMAIN_STATE_MAP = (
+    'locked'      => 'Locked',
+    'unlocked'    => 'Unlocked',
+    'locking'     => 'Locking',
+    'unlocking'   => 'Unlocking',
+    'jammed'      => 'Jammed',
+    'open'        => 'Open',
+    'closed'      => 'Closed',
+    'opening'     => 'Opening',
+    'closing'     => 'Closing',
+    'home'        => 'Home',
+    'not_home'    => 'Away',
+    'armed_away'  => 'Armed away',
+    'armed_home'  => 'Armed home',
+    'armed_night' => 'Armed night',
+    'disarmed'    => 'Disarmed',
+    'triggered'   => 'Triggered',
+    'on'          => 'On',
+    'off'         => 'Off',
 );
 
 sub initPlugin {
@@ -354,8 +409,83 @@ sub describeClientOverrides {
     });
 }
 
+sub isValidEntityId {
+    my ($entityId) = @_;
+    $entityId = _trim($entityId);
+    return ($entityId =~ /^[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+$/) ? 1 : 0;
+}
+
+sub isNumericValue {
+    my ($raw) = @_;
+    return 0 unless defined $raw;
+    $raw = _trim($raw);
+    return ($raw =~ /^[+-]?(?:\d+\.?\d*|\.\d+)$/) ? 1 : 0;
+}
+
+sub isTextualSensorState {
+    my ($stateData) = @_;
+    return 0 unless ref($stateData) && defined $stateData->{state};
+    my $raw = _trim($stateData->{state});
+    my $lc  = lc($raw);
+    return 0 if $raw eq '' || $lc eq 'unknown' || $lc eq 'unavailable';
+    return isNumericValue($raw) ? 0 : 1;
+}
+
+sub translateSensorFallback {
+    my ($stateData) = @_;
+    return '--' unless ref($stateData) && defined $stateData->{state};
+
+    my $raw = _trim($stateData->{state});
+    my $lc  = lc($raw);
+    return '--' if $raw eq '' || $lc eq 'unknown' || $lc eq 'unavailable';
+
+    my $deviceClass = (ref($stateData->{attributes}) && defined $stateData->{attributes}->{device_class})
+        ? lc(_trim($stateData->{attributes}->{device_class}))
+        : '';
+
+    if ($deviceClass ne '' && exists $BINARY_DEVICE_CLASS_MAP{$deviceClass}) {
+        if ($lc eq 'on' || $lc eq 'true') {
+            return $BINARY_DEVICE_CLASS_MAP{$deviceClass}[0];
+        } elsif ($lc eq 'off' || $lc eq 'false') {
+            return $BINARY_DEVICE_CLASS_MAP{$deviceClass}[1];
+        }
+    }
+
+    if (exists $DOMAIN_STATE_MAP{$lc}) {
+        return $DOMAIN_STATE_MAP{$lc};
+    }
+
+    return ucfirst($raw);
+}
+
+sub buildStateTranslatedTemplate {
+    my ($entityIds) = @_;
+    return '' unless ref($entityIds) eq 'ARRAY' && @$entityIds;
+
+    my @calls;
+    for my $id (@$entityIds) {
+        next unless isValidEntityId($id);
+        my $clean = lc(_trim($id));
+        push @calls, "state_translated('$clean')";
+    }
+    return '' unless @calls;
+
+    return '{{ [' . join(', ', @calls) . '] | tojson }}';
+}
+
+sub parseStateTranslatedResponse {
+    my ($content, $expectedCount) = @_;
+    return undef unless defined $content && $expectedCount && $expectedCount > 0;
+
+    my $arr = eval { decode_json($content) };
+    return undef if $@ || ref($arr) ne 'ARRAY';
+    return undef unless scalar(@$arr) == $expectedCount;
+
+    return $arr;
+}
+
 sub formatSensorState {
-    my ($stateData, $slot) = @_;
+    my ($stateData, $slot, $translatedText) = @_;
     my $label = _trim($slot->{label});
 
     if (!ref($stateData) || !defined $stateData->{state}) {
@@ -378,17 +508,45 @@ sub formatSensorState {
         };
     }
 
-    my $unit = _trim($slot->{unit});
-    if ($unit eq '' && ref($stateData->{attributes}) && defined $stateData->{attributes}->{unit_of_measurement}) {
-        $unit = _trim($stateData->{attributes}->{unit_of_measurement});
+    if (isNumericValue($raw)) {
+        my $unit = _trim($slot->{unit});
+        if ($unit eq '' && ref($stateData->{attributes}) && defined $stateData->{attributes}->{unit_of_measurement}) {
+            $unit = _trim($stateData->{attributes}->{unit_of_measurement});
+        }
+
+        my $value = $raw;
+        my $dec   = _trim($slot->{decimals});
+        if ($dec =~ /^\d+$/) {
+            my $d = int($dec);
+            $d = 4 if $d > 4;
+            $value = sprintf("%.${d}f", $raw + 0);
+        }
+
+        return {
+            label => $label,
+            value => $value,
+            unit  => $unit,
+            ok    => 1,
+        };
     }
 
-    my $value = $raw;
-    my $dec   = _trim($slot->{decimals});
-    if ($raw =~ /^[+-]?(?:\d+\.?\d*|\.\d+)$/ && $dec =~ /^\d+$/) {
-        my $d = int($dec);
-        $d = 4 if $d > 4;
-        $value = sprintf("%.${d}f", $raw + 0);
+    # Textual / categorical state (binary_sensor, lock, cover, person, etc.)
+    my $unit  = _trim($slot->{unit});
+    my $value = '';
+    if (defined $translatedText && _trim($translatedText) ne '') {
+        my $t   = _trim($translatedText);
+        my $tlc = lc($t);
+        if ($tlc eq 'unknown' || $tlc eq 'unavailable') {
+            $value = translateSensorFallback($stateData);
+        } elsif (($lc eq 'on' || $lc eq 'off') && $tlc eq $lc
+            && ref($stateData->{attributes}) && defined $stateData->{attributes}->{device_class})
+        {
+            $value = translateSensorFallback($stateData);
+        } else {
+            $value = $t;
+        }
+    } else {
+        $value = translateSensorFallback($stateData);
     }
 
     return {
@@ -527,15 +685,10 @@ sub handleSensorsRequest {
     $request->setStatusProcessing();
 
     my @results     = map { formatSensorState(undef, $_) } @slots;
+    my @slotStates  = (undef) x scalar(@slots);
     my $weatherIcon = '';
     my $alertRes    = { active => 0, text => '' };
     my $remaining   = $totalFetches;
-
-    my $finishOne = sub {
-        $remaining--;
-        return if $remaining > 0;
-        _populateSensorsResponse($request, $cfg, $alarmInfo, $weatherIcon, $alertRes, \@results, $mode);
-    };
 
     my @headers = (
         'Accept'        => 'application/json',
@@ -544,6 +697,60 @@ sub handleSensorsRequest {
     if ($token ne '') {
         push @headers, ('Authorization' => "Bearer $token");
     }
+
+    my $finishOne = sub {
+        $remaining--;
+        return if $remaining > 0;
+
+        my @textualSlots = grep {
+            isTextualSensorState($slotStates[$_->{index}]) && isValidEntityId($_->{entity})
+        } @slots;
+
+        if (!@textualSlots) {
+            _populateSensorsResponse($request, $cfg, $alarmInfo, $weatherIcon, $alertRes, \@results, $mode);
+            return;
+        }
+
+        my $template = buildStateTranslatedTemplate([ map { $_->{entity} } @textualSlots ]);
+        if ($template eq '') {
+            _populateSensorsResponse($request, $cfg, $alarmInfo, $weatherIcon, $alertRes, \@results, $mode);
+            return;
+        }
+
+        my $tmplUrl  = $baseUrl . '/api/template';
+        my $postBody = encode_json({ template => $template });
+
+        my $tmplHttp = Slim::Networking::SimpleAsyncHTTP->new(
+            sub {
+                my $resp = shift;
+                my $translated = parseStateTranslatedResponse($resp->content, scalar(@textualSlots));
+                if ($translated) {
+                    for my $k (0 .. $#textualSlots) {
+                        my $s = $textualSlots[$k];
+                        $results[$s->{index}] = formatSensorState(
+                            $slotStates[$s->{index}],
+                            $s,
+                            $translated->[$k]
+                        );
+                    }
+                } else {
+                    $log->warn('Invalid JSON from Home Assistant /api/template; using fallback labels');
+                }
+                _populateSensorsResponse($request, $cfg, $alarmInfo, $weatherIcon, $alertRes, \@results, $mode);
+            },
+            sub {
+                my ($httpObj, $err) = @_;
+                $log->warn("HA /api/template failed ($err); using fallback labels");
+                _populateSensorsResponse($request, $cfg, $alarmInfo, $weatherIcon, $alertRes, \@results, $mode);
+            },
+            {
+                cache   => 0,
+                timeout => 5,
+            }
+        );
+
+        $tmplHttp->post($tmplUrl, 'Content-Type' => 'application/json', @headers, $postBody);
+    };
 
     for my $slot (@slots) {
         my $idx = $slot->{index};
@@ -555,8 +762,10 @@ sub handleSensorsRequest {
                 my $data = eval { decode_json($resp->content) };
                 if ($@ || !ref($data)) {
                     $log->warn("Invalid JSON from Home Assistant for $slot->{entity}");
+                    $slotStates[$idx] = undef;
                     $results[$idx] = formatSensorState(undef, $slot);
                 } else {
+                    $slotStates[$idx] = $data;
                     $results[$idx] = formatSensorState($data, $slot);
                 }
                 $finishOne->();
@@ -564,6 +773,7 @@ sub handleSensorsRequest {
             sub {
                 my ($httpObj, $err) = @_;
                 $log->warn("HA fetch failed for $slot->{entity}: $err");
+                $slotStates[$idx] = undef;
                 $results[$idx] = formatSensorState(undef, $slot);
                 $finishOne->();
             },

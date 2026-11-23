@@ -130,6 +130,29 @@ local layPortrait = Model.computeLayout(240, 320, 2, true, false)
 assertEq(layPortrait.scale, 0.75, "240x320 portrait scale is 0.75")
 assertEq(layPortrait.topBarH < layPortrait.bottomBandY, true, "240x320 topBarH < bottomBandY")
 
+-- 7. UTF-8 safe truncation helper & localized textual sensor payloads
+assertEq(Model.utf8PopLastChar("Open"), "Ope", "utf8PopLastChar pops ASCII char")
+assertEq(Model.utf8PopLastChar("Öppen"), "Öppe", "utf8PopLastChar pops ASCII trailing char after UTF-8")
+assertEq(Model.utf8PopLastChar("Olå"), "Ol", "utf8PopLastChar pops full 2-byte UTF-8 char 'å'")
+assertEq(Model.utf8PopLastChar("Ö"), "", "utf8PopLastChar pops single 2-byte UTF-8 char cleanly")
+assertEq(Model.utf8PopLastChar(""), "", "utf8PopLastChar handles empty string")
+
+-- Mock widthFn where every byte costs 10px, to verify UTF-8 safe boundary truncation in "Från"
+local mockWidth = function(s) return #s * 10 end
+assertEq(Model.truncateUtf8Text("Frånkopplad", 50, mockWidth), "Fr..", "truncateUtf8Text never splits 2-byte 'å' when adding '..'")
+assertEq(Model.truncateUtf8Text("Open", 100, mockWidth), "Open", "truncateUtf8Text leaves fitting text untouched")
+
+local stText = Model.newState()
+Model.applyServerPayload(stText, {
+    poll_interval = 60,
+    sensors_loop  = {
+        { label = "Door", value = "Öppen", unit = "", ok = 1 },
+        { label = "Lock", value = "Olåst", unit = "", ok = 1 },
+    },
+}, 20000)
+assertEq(Model.formatSensorDisplay(stText.sensors[1]), "Öppen", "Localized binary_sensor value preserved without unit")
+assertEq(Model.formatSensorDisplay(stText.sensors[2]), "Olåst", "Localized lock value preserved without unit")
+
 print(string.format("Lua unit tests: %d passed, %d failed", passed, failed))
 if failed > 0 then
     os.exit(1)

@@ -18,10 +18,11 @@ Designed for room-distance readability on 2.4" Squeezebox Radio displays—large
 
 - **Large Digital Clock (`HH:MM`)**: Clean, high-contrast time (no seconds, no date) with a subtle drop shadow on a smooth dark charcoal-to-black vertical gradient. Respects your radio's 12h/24h setting.
 - **Bottom-Center Weather Symbol**: Displays a crisp anti-aliased weather glyph (`sunny`, `clear_night`, `partlycloudy`, `cloudy`, `rainy`, `pouring`, `snowy`, `fog`, `lightning`, `windy`) from any Home Assistant `weather.*` entity.
-- **Up to 4 Live Home Assistant Sensors**:
+- **Up to 4 Live Home Assistant Sensors (Numeric & Binary/Categorical)**:
   - **1–2 sensors**: Lower-left (e.g. Outside Temperature) and lower-right (e.g. Average Indoor Temperature) flanking the center weather icon.
   - **3–4 sensors**: Stacks cleanly into left and right columns around the weather icon.
-  - **Readable typography**: Large bright bold values (`28px`) paired with smaller muted units (`14px`) and subtle labels (`11px`).
+  - **Localized Binary Sensors, Locks & Covers**: Place any `binary_sensor.*`, `lock.*`, `cover.*`, or `person.*` entity in any of the 4 slots—LMS automatically queries Home Assistant's `state_translated()` (HA 2024.3+, with a built-in English `device_class` fallback) so doors show **Open / Closed**, locks show **Locked / Unlocked**, motion sensors show **Detected / Clear**, etc., in your Home Assistant language.
+  - **Readable typography**: Large bright bold values (`28px`) paired with smaller muted units (`14px`) and subtle labels (`11px`), with UTF-8 safe truncation on `320×240` displays.
 - **Subtle Radio Alarm Indicator**: Shows a muted bell icon and next scheduled alarm time (`HH:MM`) in the top-right corner when an alarm is active on that specific radio.
 - **Optional Door / Alert Banner**: Displays an alert pill with a door icon in the top-left corner **only** when a configured `binary_sensor` or text sensor is active (automatically hidden when `off`, `closed`, `none`, `ok`, or empty).
 - **Per-Radio Custom Overrides**: Set Global Defaults once for all radios, then optionally override individual sensors, weather, door alerts, or clock font per radio in LMS Player Settings—with zero applet reinstallation required on existing Squeezebox Radios.
@@ -73,7 +74,7 @@ Open **Settings → Plugins → Home Assistant Screensaver** to configure your c
 - **Clock Font**: `FreeSansBold` (default) or `FreeSans` (built into Squeezebox Radio).
 - **Weather Entity ID** *(optional)*: Any `weather.*` entity (e.g. `weather.home`).
 - **Alert / Door Contact Entity ID** *(optional)*: A `binary_sensor.*` (e.g. `binary_sensor.front_door`) or a template `sensor.*` listing open doors (hidden automatically when `off`/`closed`/`none`/`ok`/empty). Leave this blank globally if you only want door alerts on specific radios.
-- **Sensors 1–4**: Enter entity IDs, optional short labels, decimal places, and optional unit overrides.
+- **Sensors 1–4**: Enter entity IDs (numeric `sensor.*`, `binary_sensor.*`, `lock.*`, `cover.*`, etc.), optional short labels, decimal places, and optional unit overrides (decimals/units are ignored for non-numeric states unless a custom unit override is set).
   - **Slot 1** displays on the **lower-left** (e.g. `sensor.outside_temperature`).
   - **Slot 2** displays on the **lower-right** (e.g. `sensor.indoor_temperature`).
   - **Slots 3 & 4** stack beneath Slots 1 & 2 when configured.

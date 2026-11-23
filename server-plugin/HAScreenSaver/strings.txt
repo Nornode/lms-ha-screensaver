@@ -59,7 +59,7 @@ PLUGIN_HASCREENSAVER_SENSORS_SECTION
 	EN	Home Assistant Sensors — Global Defaults (up to 4)
 
 PLUGIN_HASCREENSAVER_SENSORS_DESC
-	EN	Configure 1 to 4 default sensors used by any radio without custom overrides. Leave unused slots blank. The radio adapts its layout automatically (1-2 sensors: single row; 3-4 sensors: 2x2 grid).
+	EN	Configure 1 to 4 default sensors used by any radio without custom overrides (supports numeric sensors as well as binary_sensor, lock, cover, etc., shown localized like in Home Assistant, e.g. Open/Closed or Locked/Unlocked). Leave unused slots blank; decimals and unit are ignored for non-numeric states unless a custom unit override is set. The radio adapts its layout automatically (1-2 sensors: single row; 3-4 sensors: 2x2 grid).
 
 PLUGIN_HASCREENSAVER_ENTITY_ID
 	EN	Entity ID
@@ -119,7 +119,7 @@ PLUGIN_HASCREENSAVER_PLAYER_ALERT_DESC
 	EN	Leave blank to inherit the Global Default alert, enter an entity ID (e.g. sensor.open_doors) to enable or override alerts on this radio, or enter "none" to hide a Global Default alert.
 
 PLUGIN_HASCREENSAVER_PLAYER_SENSORS_DESC
-	EN	Leave a row blank to inherit that Global Default slot, enter an Entity ID to override that slot for this radio, or enter "none" to hide that Global Default slot.
+	EN	Leave a row blank to inherit that Global Default slot, enter an Entity ID (e.g. sensor.*, binary_sensor.*, lock.*, cover.*) to override that slot for this radio, or enter "none" to hide that Global Default slot.
 
 PLUGIN_HASCREENSAVER_GLOBAL_DEFAULT_LABEL
 	EN	Global default

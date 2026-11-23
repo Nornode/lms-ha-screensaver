@@ -150,6 +150,46 @@ function M.expireIfStale(state, nowMs)
     return changed
 end
 
+function M.utf8PopLastChar(s)
+    if type(s) ~= "string" or #s == 0 then
+        return ""
+    end
+    local i = #s
+    while i > 1 do
+        local b = string.byte(s, i)
+        if b < 128 or b >= 192 then
+            break
+        end
+        i = i - 1
+    end
+    return string.sub(s, 1, i - 1)
+end
+
+function M.truncateUtf8Text(text, maxWidth, widthFn)
+    if type(text) ~= "string" or text == "" then
+        return ""
+    end
+    if type(widthFn) ~= "function" or type(maxWidth) ~= "number" then
+        return text
+    end
+    local s = text
+    while #s > 1 and widthFn(s) > maxWidth do
+        local nextS = M.utf8PopLastChar(s)
+        if nextS == "" or nextS == s then
+            break
+        end
+        s = nextS
+    end
+    if s ~= text and #s > 3 then
+        local t1 = M.utf8PopLastChar(s)
+        local t2 = M.utf8PopLastChar(t1)
+        if #t2 > 0 then
+            s = t2 .. ".."
+        end
+    end
+    return s
+end
+
 function M.formatSensorDisplay(sensor)
     if type(sensor) ~= "table" then
         return "--"
