@@ -1,5 +1,9 @@
 HA_SCREENSAVER
+	DE	Home Assistant Uhr
 	EN	Home Assistant Clock
+	FR	Horloge Home Assistant
 
 HA_SCREENSAVER_DESC
+	DE	Klarer Digitaluhr mit Radioweckeranzeige, optionalem Tür-/Alarmbanner und Live-Daten von Home Assistant Sensoren.
 	EN	Clear digital clock with radio alarm indicator, optional door/alert banner, and live Home Assistant sensors.
+	FR	Horloge numérique claire avec indicateur d’alarme radio, bannière facultative pour porte/alerte et capteurs Home Assistant en direct.
