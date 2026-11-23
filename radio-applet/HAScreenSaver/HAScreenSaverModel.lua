@@ -208,24 +208,27 @@ function M.computeLayout(screenW, screenH, sensorCount, hasTopBar, hasWeather)
     local n = sensorCount or 0
     if n > 4 then n = 4 end
 
-    local scale = math.min(w / 320, h / 240)
+    local isPortrait = (h > w)
+    local scale = isPortrait and math.min(w / 240, h / 320) or math.min(w / 320, h / 240)
     if scale <= 0 then scale = 1 end
     local function S(px)
         return math.floor(px * scale + 0.5)
     end
 
-    local hasBottom = (n > 0) or (hasWeather == true)
+    local hasBottom = (isPortrait and (n > 0)) or ((not isPortrait) and ((n > 0) or (hasWeather == true)))
     local topBarH = hasTopBar and math.max(14, S(28)) or math.max(4, S(10))
     local layout = {
         screenW         = w,
         screenH         = h,
+        isPortrait      = isPortrait,
         scale           = scale,
         topBarH         = topBarH,
         hasBottom       = hasBottom,
         sensorRows      = 0,
         sensorCols      = 0,
         uiFontSize      = math.max(8, S(12)),
-        sidePad         = math.max(4, S(12)),
+        sidePad         = isPortrait and math.max(4, S(10)) or math.max(4, S(12)),
+        colGap          = math.max(4, S(8)),
         shadowOffset    = math.max(2, S(2)),
         dividerH        = math.max(1, S(1)),
         dividerInset    = math.max(4, S(10)),
@@ -246,7 +249,93 @@ function M.computeLayout(screenW, screenH, sensorCount, hasTopBar, hasWeather)
         cellUnitYOffset = math.max(1, S(3)),
         cellLabelGap    = math.max(1, S(1)),
         cellMinValW     = math.max(12, S(24)),
+        weatherPlacement = nil,
+        weatherCenterY  = nil,
+        cells           = {},
     }
+
+    if isPortrait then
+        local fullW = w - (layout.sidePad * 2)
+        local colW = math.floor((fullW - layout.colGap) / 2)
+        local rightColX = w - layout.sidePad - colW
+
+        if n == 0 then
+            layout.bottomBandY = nil
+            layout.clockFontSize = math.max(12, math.floor(w * 0.34))
+            if hasWeather == true then
+                local availH = h - topBarH
+                layout.weatherPlacement = "above_divider"
+                layout.clockCenterY     = topBarH + math.floor(availH * 0.38)
+                layout.weatherCenterY   = topBarH + math.floor(availH * 0.72)
+            else
+                layout.clockCenterY = math.floor((h + topBarH) / 2) - math.floor(h * 0.03)
+            end
+        elseif n <= 2 then
+            layout.bottomBandY = (hasWeather == true) and math.floor(h * 0.66) or math.floor(h * 0.64)
+            local upperH = layout.bottomBandY - topBarH
+            if hasWeather == true then
+                layout.weatherPlacement = "above_divider"
+                layout.clockFontSize    = math.max(12, math.floor(w * 0.32))
+                layout.clockCenterY     = topBarH + math.floor(upperH * 0.34)
+                layout.weatherCenterY   = layout.bottomBandY - math.floor(upperH * 0.21)
+            else
+                layout.clockFontSize = math.max(12, math.floor(w * 0.34))
+                layout.clockCenterY  = math.floor((topBarH + layout.bottomBandY) / 2) - math.floor(h * 0.03)
+            end
+
+            local areaTop = layout.bottomBandY + layout.areaPad
+            local areaH   = h - areaTop - layout.areaPad
+            if n == 1 then
+                layout.sensorRows    = 1
+                layout.sensorCols    = 1
+                layout.labelFontSize = math.max(8, S(12))
+                layout.valueFontSize = math.max(12, S(30))
+                layout.unitFontSize  = math.max(9, S(15))
+                layout.cells[1] = { x = layout.sidePad, y = areaTop, w = fullW, h = areaH, align = "center" }
+            else
+                local rowH = math.floor(areaH / 2)
+                layout.sensorRows    = 2
+                layout.sensorCols    = 1
+                layout.labelFontSize = math.max(8, S(12))
+                layout.valueFontSize = math.max(12, S(26))
+                layout.unitFontSize  = math.max(9, S(13))
+                layout.cells[1] = { x = layout.sidePad, y = areaTop,        w = fullW, h = rowH, align = "row" }
+                layout.cells[2] = { x = layout.sidePad, y = areaTop + rowH, w = fullW, h = rowH, align = "row" }
+            end
+        else
+            layout.sensorRows  = 2
+            layout.sensorCols  = 2
+            layout.bottomBandY = math.floor(h * 0.56)
+            local upperH = layout.bottomBandY - topBarH
+            if hasWeather == true then
+                layout.weatherPlacement = "above_divider"
+                layout.clockFontSize    = math.max(12, math.floor(w * 0.28))
+                layout.clockCenterY     = topBarH + math.floor(upperH * 0.32)
+                layout.weatherCenterY   = layout.bottomBandY - math.floor(upperH * 0.20)
+            else
+                layout.clockFontSize = math.max(12, math.floor(w * 0.33))
+                layout.clockCenterY  = math.floor((topBarH + layout.bottomBandY) / 2) - math.floor(h * 0.03)
+            end
+
+            layout.labelFontSize = math.max(8, S(10))
+            layout.valueFontSize = math.max(12, S(20))
+            layout.unitFontSize  = math.max(9, S(12))
+
+            local areaTop = layout.bottomBandY + layout.areaPad
+            local areaH   = h - areaTop - layout.areaPad
+            local rowH    = math.floor(areaH / 2)
+            layout.cells[1] = { x = layout.sidePad, y = areaTop, w = colW, h = rowH, align = "left" }
+            layout.cells[2] = { x = rightColX,      y = areaTop, w = colW, h = rowH, align = "right" }
+            if n == 3 then
+                layout.cells[3] = { x = layout.sidePad, y = areaTop + rowH, w = fullW, h = rowH, align = "center" }
+            else
+                layout.cells[3] = { x = layout.sidePad, y = areaTop + rowH, w = colW, h = rowH, align = "left" }
+                layout.cells[4] = { x = rightColX,      y = areaTop + rowH, w = colW, h = rowH, align = "right" }
+            end
+        end
+
+        return layout
+    end
 
     if not hasBottom then
         layout.clockFontSize = math.floor(h * 0.44)
@@ -272,7 +361,7 @@ function M.computeLayout(screenW, screenH, sensorCount, hasTopBar, hasWeather)
         layout.unitFontSize  = math.max(9, S(13))
     else
         layout.sensorRows    = 2
-        layout.sensorCols    = 2
+        layout.sensorCols  = 2
         layout.bottomBandY   = math.floor(h * 0.56)
         layout.clockFontSize = math.floor(h * 0.32)
         layout.clockCenterY  = math.floor((topBarH + layout.bottomBandY) / 2) - math.floor(h * 0.04)

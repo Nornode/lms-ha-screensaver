@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-VERSION="${1:-1.4.0}"
+VERSION="${1:-1.5.0}"
 GITHUB_REPO="${2:-Nornode/lms-ha-screensaver}"
 TAG="v${VERSION}"
 DIST_DIR="$ROOT_DIR/dist"
@@ -44,7 +44,7 @@ cat > "$ROOT_DIR/repo.xml" <<XML
   <plugins>
     <plugin name="HAScreenSaver" version="${VERSION}" minTarget="8.0" maxTarget="*" icon="https://raw.githubusercontent.com/${GITHUB_REPO}/main/server-plugin/HAScreenSaver/HTML/EN/plugins/HAScreenSaver/html/images/icon.png">
       <title lang="EN">Home Assistant Screensaver</title>
-      <desc lang="EN">Stateless live proxy serving Home Assistant sensor states, weather condition, door/alert status, and radio alarm status to the Home Assistant Clock screensaver applet on Squeezebox Radio, Squeezebox Touch, and Jivelite, with zero long-term caching. Automatically serves the applet over plain local HTTP to Applet Installer.</desc>
+      <desc lang="EN">Stateless live proxy serving Home Assistant sensor states, weather condition, door/alert status, and radio alarm status to the Home Assistant Clock screensaver applet on Squeezebox Radio, Squeezebox Controller, Squeezebox Touch, and Jivelite, with zero long-term caching. Automatically serves the applet over plain local HTTP to Applet Installer.</desc>
       <url>https://github.com/${GITHUB_REPO}/releases/download/${TAG}/HAScreenSaver-plugin-${TAG}.zip</url>
       <sha>${PLUGIN_SHA1}</sha>
       <creator>Nornode</creator>

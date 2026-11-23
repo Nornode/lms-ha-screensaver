@@ -17,9 +17,9 @@ This repository contains an open-source **Lyrion Music Server (LMS)** plugin (`s
    - Always use `use strict; use warnings;`.
    - Never perform synchronous blocking HTTP calls (`LWP::Simple`, blocking sockets) inside LMS request handlers. Always use `Slim::Networking::SimpleAsyncHTTP` and `$request->setStatusProcessing()` / `$request->setStatusDone()`.
 
-4. **320×240 QVGA Readability**
-   - The digital clock (`HH:MM`, no seconds, no date) is the primary element and must remain large, high-contrast, and legible across a room.
-   - The alarm indicator reflects the alarm state of the specific radio running the screensaver.
+4. **320×240 Landscape & 240×320 Portrait Readability**
+   - The digital clock (`HH:MM`, no seconds, no date) is the primary element and must remain large, high-contrast, and legible across a room on both landscape (`baby` 320×240, `fab4` 480×272) and portrait (`jive` 240×320) screens.
+   - The alarm indicator reflects the alarm state of the active/controlled player (or clears cleanly when no player is selected on a Controller).
    - The optional alert/text sensor (e.g. open door contacts) only renders when active/non-empty so the display stays uncluttered during normal operation.
 
 5. **Public Release & Zero Secrets**

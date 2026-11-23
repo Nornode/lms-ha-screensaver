@@ -738,8 +738,8 @@ is(Plugins::HAScreenSaver::Plugin::formatWeatherIcon({ state => 'unknown' }),   
     });
     is(scalar(@$nonAppletRes), 0, 'getJiveExtensions returns empty for non-applet type');
 
-    # fab4 (Squeezebox Touch) and jivelite targets return applet
-    for my $t (qw(fab4 jivelite Jivelite)) {
+    # jive (Squeezebox Controller), fab4 (Squeezebox Touch) and jivelite targets return applet
+    for my $t (qw(jive fab4 jivelite Jivelite)) {
         my $tRes;
         Plugins::HAScreenSaver::Plugin::getJiveExtensions({
             type   => 'applet',

@@ -1,8 +1,9 @@
 -- Home Assistant Digital Clock Screensaver for Squeezebox Radio (baby, 320x240),
--- Squeezebox Touch (fab4, 480x272 / 420x272), and Jivelite (arbitrary resolutions).
--- Dark shaded background, prominent digital clock, bottom-center weather glyph,
--- lower-left / lower-right sensors with large readable values and subtle labels/units,
--- plus radio alarm icon and optional door-open alert pill.
+-- Squeezebox Controller (jive, 240x320 portrait), Squeezebox Touch (fab4, 480x272 / 420x272),
+-- and Jivelite (arbitrary landscape and portrait resolutions).
+-- Dark shaded background, prominent digital clock, weather glyph,
+-- readable sensor values with subtle labels/units,
+-- plus radio/player alarm icon and optional door-open alert pill.
 -- Strict zero-long-term-caching: all sensor values live strictly in transient RAM.
 
 local oo            = require("loop.simple")
@@ -55,6 +56,8 @@ function openScreensaver(self)
 
     self.state       = Model.newState()
     self.lastTimeStr = nil
+    self.lastTickMs  = nil
+    self.reqSeq      = 0
     self.fonts       = {}
     self.iconCache   = {}
 
@@ -155,6 +158,16 @@ function notify_playerAlarmState(self, player, alarmState)
     end
 end
 
+function notify_playerCurrent(self, player)
+    if self.window and self.state then
+        self.state.alarmActive = false
+        self.state.alarmTime   = ""
+        self:_markSensorsUnavailable()
+        self:_requestRedraw()
+        self:_fetchFromServer()
+    end
+end
+
 function _requestRedraw(self)
     if self.canvas then
         self.canvas:reDraw()
@@ -218,6 +231,8 @@ function _cleanup(self)
     self.iconCache   = nil
     self.state       = nil
     self.lastTimeStr = nil
+    self.lastTickMs  = nil
+    self.reqSeq      = nil
 end
 
 function _onClockTick(self)
@@ -226,6 +241,12 @@ function _onClockTick(self)
     end
 
     local nowMs = Framework:getTicks()
+    local prevTickMs = self.lastTickMs
+    self.lastTickMs = nowMs
+    if prevTickMs and nowMs and (nowMs - prevTickMs) > 3000 then
+        self:_fetchFromServer()
+    end
+
     local staleChanged = Model.expireIfStale(self.state, nowMs)
     local curTime = self:_currentTimeString()
 
@@ -259,38 +280,88 @@ function _markSensorsUnavailable(self)
     self.state.alertText   = ""
 end
 
+function _resolveServerAndPlayer(self)
+    local okPlayer, player = pcall(function()
+        return appletManager:callService("getCurrentPlayer")
+    end)
+    if not okPlayer then
+        player = nil
+    end
+
+    local server = nil
+    local playerId = nil
+    if player then
+        local okId, pid = pcall(function() return player:getId() end)
+        if okId and pid and pid ~= "" then
+            playerId = pid
+        end
+        local okSrv, srv = pcall(function() return player:getSlimServer() end)
+        if okSrv and srv then
+            server = srv
+        end
+    end
+
+    if not server then
+        local okCur, curSrv = pcall(function()
+            return appletManager:callService("getCurrentServer")
+        end)
+        if okCur and curSrv then
+            local isSN = curSrv.isSqueezeNetwork and curSrv:isSqueezeNetwork()
+            if not isSN then
+                server = curSrv
+            end
+        end
+    end
+
+    if not server then
+        local okIter, f, s, v = pcall(function()
+            return appletManager:callService("iterateSqueezeCenters")
+        end)
+        if okIter and type(f) == "function" then
+            for _, srv in f, s, v do
+                local connected = (not srv.isConnected) or srv:isConnected()
+                local isSN      = srv.isSqueezeNetwork and srv:isSqueezeNetwork()
+                if connected and not isSN then
+                    server = srv
+                    break
+                end
+            end
+        end
+    end
+
+    return server, player, playerId
+end
+
 function _fetchFromServer(self)
     if not self.window or not self.state then
         return
     end
 
-    local okPlayer, player = pcall(function()
-        return appletManager:callService("getCurrentPlayer")
-    end)
-    if not okPlayer or not player then
-        return
-    end
+    local server, player, playerId = self:_resolveServerAndPlayer()
 
-    -- Local alarm fallback
-    if player.getAlarmState then
+    if player and player.getAlarmState then
         local okAlarm, localAlarm = pcall(function() return player:getAlarmState() end)
         if okAlarm and localAlarm and localAlarm ~= "none" then
             self.state.alarmActive = true
         end
+    elseif not player then
+        self.state.alarmActive = false
+        self.state.alarmTime   = ""
     end
 
-    local okServer, server = pcall(function() return player:getSlimServer() end)
-    if not okServer or not server then
+    if not server then
         self:_markSensorsUnavailable()
         self:_requestRedraw()
         return
     end
 
-    local playerId = player:getId()
+    self.reqSeq = (self.reqSeq or 0) + 1
+    local token = self.reqSeq
+
     pcall(function()
         server:request(
             function(chunk, err)
-                if not self.window or not self.state then
+                if not self.window or not self.state or token ~= self.reqSeq then
                     return
                 end
                 if err or not chunk or not chunk.data then
@@ -307,7 +378,7 @@ function _fetchFromServer(self)
 
                 self:_requestRedraw()
             end,
-            playerId,
+            playerId or "",
             { "hascreensaver", "sensors" }
         )
     end)
@@ -372,6 +443,48 @@ function _drawSensorCell(self, surf, sensor, x, y, width, height, align, labelFo
     local valColor = sensor.ok and COLOR_VALUE or COLOR_STALE
     local valStr   = sensor.value or "--"
     local unitStr  = (valStr ~= "--" and sensor.unit) or ""
+
+    if align == "row" then
+        local rowGap   = (layout and layout.colGap) or 8
+        local unitSurf = (unitStr ~= "") and Surface:drawText(unitFont, COLOR_UNIT, unitStr) or nil
+        local uw, uh   = 0, 0
+        if unitSurf then
+            uw, uh = unitSurf:getSize()
+        end
+
+        local maxValW = math.floor(width * 0.62) - (unitSurf and (uw + unitReserve) or 0)
+        if maxValW < minValW then maxValW = math.floor(width * 0.62) end
+        valStr = self:_truncateText(valueFont, valStr, maxValW)
+
+        local valSurf = Surface:drawText(valueFont, valColor, valStr)
+        local vw, vh  = valSurf:getSize()
+        local combinedW = vw + (unitSurf and (uw + unitGap) or 0)
+
+        local maxLblW = width - combinedW - rowGap
+        if maxLblW < minValW then maxLblW = minValW end
+        local lblStr  = self:_truncateText(labelFont, sensor.label or "", maxLblW)
+        local lblSurf = (lblStr ~= "") and Surface:drawText(labelFont, COLOR_LABEL, lblStr) or nil
+        local lw, lh  = 0, 0
+        if lblSurf then
+            lw, lh = lblSurf:getSize()
+        end
+
+        local valX = x + width - combinedW
+        local valY = y + math.floor((height - vh) / 2)
+        if valY < y then valY = y end
+
+        if lblSurf then
+            local lblY = y + math.floor((height - lh) / 2)
+            if lblY < y then lblY = y end
+            lblSurf:blit(surf, x, lblY)
+        end
+        valSurf:blit(surf, valX, valY)
+        if unitSurf then
+            unitSurf:blit(surf, valX + vw + unitGap, valY + unitYOff)
+        end
+        return
+    end
+
     local lblStr   = self:_truncateText(labelFont, sensor.label or "", width)
 
     local unitSurf = (unitStr ~= "") and Surface:drawText(unitFont, COLOR_UNIT, unitStr) or nil
@@ -549,10 +662,17 @@ function _drawOnScreen(self, surf)
         clockSurf:blit(surf, cx, cy)
     end
 
-    -- 4. Bottom Telemetry Band:
-    --    1-2 sensors: Lower-Left = Sensor 1, Bottom-Center = Weather Symbol, Lower-Right = Sensor 2
-    --    3-4 sensors: Widescreen (w/h >= 1.65) uses 1 horizontal row (2 left + weather + 2 right);
-    --                 4:3 / Radio (320x240) / portrait stacks into a 2x2 grid around weather.
+    -- 4. Weather above divider (portrait) + Bottom Telemetry Band:
+    --    Landscape 1-2 sensors: Lower-Left = Sensor 1, Bottom-Center = Weather Symbol, Lower-Right = Sensor 2
+    --    Landscape 3-4 sensors: Widescreen (w/h >= 1.65) uses 1 horizontal row; 4:3 uses 2x2 grid around weather.
+    --    Portrait (h > w): Weather renders above divider; sensors use explicit full-width/row/2x2 rects.
+    if weatherImg and layout.weatherPlacement == "above_divider" and layout.weatherCenterY then
+        local ww, wh = weatherImg:getSize()
+        local wx = math.floor((w - ww) / 2)
+        local wy = math.floor(layout.weatherCenterY - (wh / 2))
+        weatherImg:blit(surf, wx, wy)
+    end
+
     if layout.hasBottom and layout.bottomBandY then
         local bandY = layout.bottomBandY
         surf:filledRectangle(0, bandY, w - 1, h - 1, rgba(4, 6, 10, 140))
@@ -562,7 +682,7 @@ function _drawOnScreen(self, surf)
         local areaHeight = h - areaTop - layout.areaPad
 
         local centerReserveW = 0
-        if weatherImg then
+        if weatherImg and layout.weatherPlacement ~= "above_divider" then
             local ww, wh = weatherImg:getSize()
             centerReserveW = ww + layout.weatherPad
             local wx = math.floor((w - ww) / 2)
@@ -577,36 +697,44 @@ function _drawOnScreen(self, surf)
             local unitFont  = self:_getFont("fonts/FreeSans.ttf", layout.unitFontSize)
 
             if labelFont and valueFont and unitFont then
-                local sidePad = layout.sidePad
-                local sideW = math.floor((w - (sidePad * 2) - centerReserveW) / 2)
-                local leftX = sidePad
-                local rightX = w - sidePad - sideW
-
-                if count == 1 then
-                    self:_drawSensorCell(surf, state.sensors[1], leftX, areaTop, sideW, areaHeight, "left", labelFont, valueFont, unitFont, layout)
-                elseif count == 2 then
-                    self:_drawSensorCell(surf, state.sensors[1], leftX, areaTop, sideW, areaHeight, "left", labelFont, valueFont, unitFont, layout)
-                    self:_drawSensorCell(surf, state.sensors[2], rightX, areaTop, sideW, areaHeight, "right", labelFont, valueFont, unitFont, layout)
-                elseif layout.sensorRows == 1 then
-                    local colGap = math.max(4, math.floor(sidePad / 2))
-                    local subW = math.floor((sideW - colGap) / 2)
-                    self:_drawSensorCell(surf, state.sensors[1], leftX,                 areaTop, subW, areaHeight, "left",   labelFont, valueFont, unitFont, layout)
-                    self:_drawSensorCell(surf, state.sensors[2], leftX + subW + colGap, areaTop, subW, areaHeight, "center", labelFont, valueFont, unitFont, layout)
-                    if count == 3 then
-                        self:_drawSensorCell(surf, state.sensors[3], rightX, areaTop, sideW, areaHeight, "right", labelFont, valueFont, unitFont, layout)
-                    else
-                        self:_drawSensorCell(surf, state.sensors[3], rightX,                 areaTop, subW, areaHeight, "center", labelFont, valueFont, unitFont, layout)
-                        self:_drawSensorCell(surf, state.sensors[4], rightX + subW + colGap, areaTop, subW, areaHeight, "right",  labelFont, valueFont, unitFont, layout)
+                if layout.isPortrait and layout.cells then
+                    local cellCount = math.min(count, #layout.cells)
+                    for i = 1, cellCount do
+                        local c = layout.cells[i]
+                        self:_drawSensorCell(surf, state.sensors[i], c.x, c.y, c.w, c.h, c.align, labelFont, valueFont, unitFont, layout)
                     end
                 else
-                    local rowH = math.floor(areaHeight / 2)
-                    self:_drawSensorCell(surf, state.sensors[1], leftX,  areaTop,        sideW, rowH, "left",  labelFont, valueFont, unitFont, layout)
-                    self:_drawSensorCell(surf, state.sensors[2], rightX, areaTop,        sideW, rowH, "right", labelFont, valueFont, unitFont, layout)
-                    if state.sensors[3] then
-                        self:_drawSensorCell(surf, state.sensors[3], leftX,  areaTop + rowH, sideW, rowH, "left",  labelFont, valueFont, unitFont, layout)
-                    end
-                    if state.sensors[4] then
-                        self:_drawSensorCell(surf, state.sensors[4], rightX, areaTop + rowH, sideW, rowH, "right", labelFont, valueFont, unitFont, layout)
+                    local sidePad = layout.sidePad
+                    local sideW = math.floor((w - (sidePad * 2) - centerReserveW) / 2)
+                    local leftX = sidePad
+                    local rightX = w - sidePad - sideW
+
+                    if count == 1 then
+                        self:_drawSensorCell(surf, state.sensors[1], leftX, areaTop, sideW, areaHeight, "left", labelFont, valueFont, unitFont, layout)
+                    elseif count == 2 then
+                        self:_drawSensorCell(surf, state.sensors[1], leftX, areaTop, sideW, areaHeight, "left", labelFont, valueFont, unitFont, layout)
+                        self:_drawSensorCell(surf, state.sensors[2], rightX, areaTop, sideW, areaHeight, "right", labelFont, valueFont, unitFont, layout)
+                    elseif layout.sensorRows == 1 then
+                        local colGap = math.max(4, math.floor(sidePad / 2))
+                        local subW = math.floor((sideW - colGap) / 2)
+                        self:_drawSensorCell(surf, state.sensors[1], leftX,                 areaTop, subW, areaHeight, "left",   labelFont, valueFont, unitFont, layout)
+                        self:_drawSensorCell(surf, state.sensors[2], leftX + subW + colGap, areaTop, subW, areaHeight, "center", labelFont, valueFont, unitFont, layout)
+                        if count == 3 then
+                            self:_drawSensorCell(surf, state.sensors[3], rightX, areaTop, sideW, areaHeight, "right", labelFont, valueFont, unitFont, layout)
+                        else
+                            self:_drawSensorCell(surf, state.sensors[3], rightX,                 areaTop, subW, areaHeight, "center", labelFont, valueFont, unitFont, layout)
+                            self:_drawSensorCell(surf, state.sensors[4], rightX + subW + colGap, areaTop, subW, areaHeight, "right",  labelFont, valueFont, unitFont, layout)
+                        end
+                    else
+                        local rowH = math.floor(areaHeight / 2)
+                        self:_drawSensorCell(surf, state.sensors[1], leftX,  areaTop,        sideW, rowH, "left",  labelFont, valueFont, unitFont, layout)
+                        self:_drawSensorCell(surf, state.sensors[2], rightX, areaTop,        sideW, rowH, "right", labelFont, valueFont, unitFont, layout)
+                        if state.sensors[3] then
+                            self:_drawSensorCell(surf, state.sensors[3], leftX,  areaTop + rowH, sideW, rowH, "left",  labelFont, valueFont, unitFont, layout)
+                        end
+                        if state.sensors[4] then
+                            self:_drawSensorCell(surf, state.sensors[4], rightX, areaTop + rowH, sideW, rowH, "right", labelFont, valueFont, unitFont, layout)
+                        end
                     end
                 end
             end

@@ -4,19 +4,23 @@
 [![Release](https://img.shields.io/github/v/release/Nornode/lms-ha-screensaver)](https://github.com/Nornode/lms-ha-screensaver/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
-A clean, glanceable **digital clock screensaver for Logitech Squeezebox Radio (`baby`, 320×240), Squeezebox Touch (`fab4`, 480×272 / 420×272), and Jivelite** powered by a stateless **Lyrion Music Server (LMS 8.x / 9.x)** plugin that proxies live **Home Assistant** sensor data, weather conditions, and door/alert statuses with **zero long-term caching**.
+A clean, glanceable **digital clock screensaver for Logitech Squeezebox Radio (`baby`, 320×240), Squeezebox Controller (`jive`, 240×320 portrait, *experimental*), Squeezebox Touch (`fab4`, 480×272 / 420×272), and Jivelite** powered by a stateless **Lyrion Music Server (LMS 8.x / 9.x)** plugin that proxies live **Home Assistant** sensor data, weather conditions, and door/alert statuses with **zero long-term caching**.
 
-Designed for room-distance readability on 2.4" Squeezebox Radio displays—large crisp time on a dark shaded gradient background, bottom-center weather icon, up to 4 live Home Assistant numeric or localized binary/categorical sensors (temperatures, doors, windows, locks, chargers, presence, etc.), a muted radio alarm indicator, and an optional door-open alert pill that stays hidden when everything is closed.
+Designed for room-distance readability on 2.4" Squeezebox displays—large crisp time on a dark shaded gradient background, weather icon, up to 4 live Home Assistant numeric or localized binary/categorical sensors (temperatures, solar production, doors, windows, locks, chargers, presence, etc.), a muted radio/player alarm indicator, and an optional door-open alert pill that stays hidden when everything is closed.
 
 <table>
   <tr>
     <td align="center">
       <img src="docs/screenshot.png" alt="2-sensor layout on a 320x240 Logitech Squeezebox Radio" width="320" height="240" /><br/>
-      <em>2-sensor layout (Outside &amp; Indoor temperatures)</em>
+      <em>Radio 320×240 — 2-sensor layout (Outside &amp; Indoor)</em>
     </td>
     <td align="center">
-      <img src="docs/screenshot-4sensors.png" alt="4-sensor layout with numeric temperatures and localized binary sensors (Window: Closed, Car: Unplugged) on a 320x240 Logitech Squeezebox Radio" width="320" height="240" /><br/>
-      <em>4-sensor 2×2 layout (Temperatures + Window &amp; Car plug binary sensors)</em>
+      <img src="docs/screenshot-4sensors.png" alt="4-sensor layout with numeric temperatures and localized binary sensors on a 320x240 Logitech Squeezebox Radio" width="320" height="240" /><br/>
+      <em>Radio 320×240 — 4-sensor 2×2 layout (Temps &amp; Binary sensors)</em>
+    </td>
+    <td align="center">
+      <img src="docs/screenshot-controller.png" alt="2-sensor portrait visualization on a 240x320 Logitech Squeezebox Controller" width="240" height="320" /><br/>
+      <em>Controller 240×320 (preview) — Portrait stacked rows (Solar &amp; Outside)</em>
     </td>
   </tr>
 </table>
@@ -26,10 +30,10 @@ Designed for room-distance readability on 2.4" Squeezebox Radio displays—large
 ## Features
 
 - **Large Digital Clock (`HH:MM`)**: Clean, high-contrast time (no seconds, no date) with a subtle drop shadow on a smooth dark charcoal-to-black vertical gradient. Respects your radio's 12h/24h setting.
-- **Bottom-Center Weather Symbol**: Displays a crisp anti-aliased weather glyph (`sunny`, `clear_night`, `partlycloudy`, `cloudy`, `rainy`, `pouring`, `snowy`, `fog`, `lightning`, `windy`) from any Home Assistant `weather.*` entity.
+- **Adaptive Weather Symbol**: Displays a crisp anti-aliased weather glyph (`sunny`, `clear_night`, `partlycloudy`, `cloudy`, `rainy`, `pouring`, `snowy`, `fog`, `lightning`, `windy`) from any Home Assistant `weather.*` entity—centered between sensors on landscape screens, and centered above the divider on portrait screens (`240×320`).
 - **Up to 4 Live Home Assistant Sensors (Numeric & Binary/Categorical)**:
-  - **1–2 sensors**: Lower-left (e.g. Outside Temperature) and lower-right (e.g. Average Indoor Temperature) flanking the center weather icon.
-  - **3–4 sensors**: Stacks cleanly into left and right columns around the weather icon.
+  - **Landscape (Radio / Touch / Jivelite)**: 1–2 sensors flank the center weather icon; 3–4 sensors use a single row on widescreen (`480×272` Touch) or a 2×2 grid (`320×240` Radio).
+  - **Portrait (Squeezebox Controller `240×320` / Portrait Jivelite)**: 1 sensor centers full-width; 2 sensors stack as full-width horizontal rows (label left, value right) so wide values like `4.85 kW` or localized states never truncate; 3–4 sensors use a compact 2×2 grid.
   - **Localized Binary Sensors, Locks & Covers**: Place any `binary_sensor.*`, `lock.*`, `cover.*`, or `person.*` entity in any of the 4 slots—LMS automatically queries Home Assistant's `state_translated()` (HA 2024.3+, with a built-in English `device_class` fallback) so doors show **Open / Closed**, locks show **Locked / Unlocked**, motion sensors show **Detected / Clear**, etc., in your Home Assistant language.
   - **Readable typography**: Large bright bold values (`28px`) paired with smaller muted units (`14px`) and subtle labels (`11px`), with UTF-8 safe truncation on `320×240` displays.
 - **Subtle Radio Alarm Indicator**: Shows a muted bell icon and next scheduled alarm time (`HH:MM`) in the top-right corner when an alarm is active on that specific radio.
@@ -50,7 +54,7 @@ Designed for room-distance readability on 2.4" Squeezebox Radio displays—large
 flowchart LR
     HA["Home Assistant<br/>/api/states/{entity_id}<br/>+ /api/template (state_translated)"]
     LMS["Lyrion Music Server (LMS 8/9)<br/>Plugins::HAScreenSaver (Perl)"]
-    Radio["Squeezebox Radio / Touch / Jivelite<br/>Adaptive QVGA+ (Lua 5.1)"]
+    Radio["Squeezebox Radio / Controller / Touch / Jivelite<br/>Adaptive QVGA+ Landscape &amp; Portrait (Lua 5.1)"]
 
     Radio -- "Comet JSON-RPC (every 60s while active)<br/>hascreensaver sensors" --> LMS
     LMS -- "Live Async HTTP (cache => 0, no-cache)" --> HA
@@ -108,13 +112,15 @@ You can also pick a per-radio **Clock Font** override or reset all custom overri
 - **Kids' rooms (2nd floor)**: Override only **Slot 2** with the room/2nd-floor temperature; Outside temp and Weather keep inheriting, and door alerts stay off.
 - **Your own radio**: Set **Alert** to `sensor.open_doors` (plus override **Slot 2** if upstairs).
 
-### Step 3: Install the Applet on Your Squeezebox Radio, Touch, or Jivelite
+*Note for Squeezebox Controller (`jive`)*: Because the Controller acts as a remote for whichever player is selected (for example, a kitchen AudioPro/WiiM speaker), it automatically displays that player's per-player overrides and alarm status, and switches live when you change players. If the controlled speaker is offline or deselected, the Controller gracefully falls back to your **Global Defaults**.
 
-Once the LMS plugin is enabled, it automatically advertises **Home Assistant Clock** to connected Squeezebox Radios (`baby`), Squeezebox Touch (`fab4`), and Jivelite clients over plain local HTTP (no extra repository URL or HTTPS required):
+### Step 3: Install the Applet on Your Squeezebox Radio, Controller, Touch, or Jivelite
 
-1. On your Squeezebox Radio, Squeezebox Touch, or Jivelite, open **Settings → Advanced → Applet Installer**.
+Once the LMS plugin is enabled, it automatically advertises **Home Assistant Clock** to connected Squeezebox Radios (`baby`), Squeezebox Controllers (`jive`, *experimental*), Squeezebox Touch (`fab4`), and Jivelite clients over plain local HTTP (no extra repository URL or HTTPS required):
+
+1. On your Squeezebox Radio, Controller, Touch, or Jivelite, open **Settings → Advanced → Applet Installer**.
 2. Select **Home Assistant Clock** → **Install** (the client downloads the `.zip` directly from your local LMS server over plain HTTP, verifies its SHA-1, installs, and restarts).
-3. Enable it under **Settings → Screen → Screensavers** (*When Off*, *When Stopped*, and/or *When Playing*).
+3. Enable it under **Settings → Screen → Screensavers** (*When Off*, *When Stopped*, and/or *When Playing*). On a **Squeezebox Controller**, set it for both **When Stopped** and **When Playing** if you want Home Assistant sensors visible while your speaker is playing.
 
 *(Tip: The LMS plugin also self-hosts a standalone XML manifest at `http://<YOUR_LMS_HOST>:9000/plugins/HAScreenSaver/repo.xml` if you ever need to inspect it manually.)*
 

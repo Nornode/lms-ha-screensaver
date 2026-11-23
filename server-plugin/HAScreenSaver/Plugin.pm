@@ -17,7 +17,7 @@ use Slim::Utils::Log;
 use Slim::Utils::Prefs;
 use Slim::Web::Pages;
 
-our $VERSION = '1.4.0';
+our $VERSION = '1.5.0';
 
 my $log = Slim::Utils::Log->addLogCategory({
     category     => 'plugin.hascreensaver',
@@ -884,7 +884,7 @@ sub getJiveExtensions {
             push @res, {
                 name    => 'HAScreenSaver',
                 title   => 'Home Assistant Clock',
-                desc    => 'Dark-shaded digital clock screensaver for Squeezebox Radio, Squeezebox Touch, and Jivelite with bottom-center weather icon, up to 4 live Home Assistant sensors, subtle radio alarm indicator, and optional door/alert banner. Zero long-term caching.',
+                desc    => 'Dark-shaded digital clock screensaver for Squeezebox Radio, Squeezebox Controller, Squeezebox Touch, and Jivelite with weather icon, up to 4 live Home Assistant sensors, subtle alarm indicator, and optional door/alert banner. Zero long-term caching.',
                 creator => 'Nornode',
                 link    => 'https://github.com/Nornode/lms-ha-screensaver',
                 version => $VERSION,
@@ -923,7 +923,7 @@ sub buildRepoXml {
             url="$zipUrl"
             sha="$sha1">
       <title lang="EN">Home Assistant Clock</title>
-      <desc lang="EN">Clear digital clock screensaver for Squeezebox Radio, Squeezebox Touch, and Jivelite with alarm indicator, optional door/alert banner, and up to 4 live Home Assistant sensors.</desc>
+      <desc lang="EN">Clear digital clock screensaver for Squeezebox Radio, Squeezebox Controller, Squeezebox Touch, and Jivelite with alarm indicator, optional door/alert banner, and up to 4 live Home Assistant sensors.</desc>
     </applet>
   </applets>
 </extensions>

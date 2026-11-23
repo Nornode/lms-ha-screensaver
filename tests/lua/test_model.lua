@@ -127,8 +127,69 @@ assertEq(layJive1080.bottomBandY < 1080, true, "1920x1080 bottomBandY < h")
 assertEq(layJive1080.valueFontSize, 108, "1920x1080 valueFontSize scales proportionally")
 
 local layPortrait = Model.computeLayout(240, 320, 2, true, false)
-assertEq(layPortrait.scale, 0.75, "240x320 portrait scale is 0.75")
+assertEq(layPortrait.isPortrait, true, "240x320 detected as portrait")
+assertEq(layPortrait.scale, 1, "240x320 Controller portrait scale is 1")
+assertEq(layPortrait.sensorRows, 2, "240x320 2 sensors stacks into 2 full-width rows")
+assertEq(layPortrait.sensorCols, 1, "240x320 2 sensors uses 1 column")
+assertEq(layPortrait.cells[1].align, "row", "240x320 2 sensors uses row alignment")
 assertEq(layPortrait.topBarH < layPortrait.bottomBandY, true, "240x320 topBarH < bottomBandY")
+
+-- 6b. Portrait property & non-overlap checks across Controller (240x320), 240x360, and portrait Jivelite
+local portraitSizes = {
+    { 240, 320 },
+    { 240, 360 },
+    { 320, 480 },
+    { 360, 640 },
+    { 480, 800 },
+}
+for _, sz in ipairs(portraitSizes) do
+    local pw, ph = sz[1], sz[2]
+    for n = 0, 4 do
+        for _, hasTopBar in ipairs({ false, true }) do
+            for _, hasWeather in ipairs({ false, true }) do
+                local lay = Model.computeLayout(pw, ph, n, hasTopBar, hasWeather)
+                local tag = string.format("%dx%d n=%d top=%s wx=%s", pw, ph, n, tostring(hasTopBar), tostring(hasWeather))
+                assertEq(lay.isPortrait, true, tag .. " isPortrait")
+                local clockH = math.floor(lay.clockFontSize * 1.2 + 0.5)
+                local clockTop = math.floor(lay.clockCenterY - (clockH / 2))
+                local clockBot = clockTop + clockH
+                assertEq(clockTop >= lay.topBarH, true, tag .. " clockTop >= topBarH")
+
+                if hasWeather and lay.weatherCenterY then
+                    local iconH = math.floor(44 * lay.scale + 0.5)
+                    local wxTop = math.floor(lay.weatherCenterY - (iconH / 2))
+                    local wxBot = wxTop + iconH
+                    assertEq(wxTop >= clockBot, true, tag .. " weatherTop >= clockBottom")
+                    if lay.bottomBandY then
+                        assertEq(wxBot <= lay.bottomBandY, true, tag .. " weatherBottom <= bottomBandY")
+                    else
+                        assertEq(wxBot <= ph, true, tag .. " weatherBottom <= screenH")
+                    end
+                end
+
+                if lay.hasBottom then
+                    assertEq(lay.bottomBandY ~= nil and lay.bottomBandY < ph, true, tag .. " bottomBandY < screenH")
+                    assertEq(#lay.cells, n, tag .. " emits n cells")
+                    local areaTop = lay.bottomBandY + lay.areaPad
+                    local areaBot = ph - lay.areaPad
+                    for i = 1, #lay.cells do
+                        local c = lay.cells[i]
+                        assertEq(c.x >= lay.sidePad, true, tag .. " cell x >= sidePad")
+                        assertEq(c.x + c.w <= pw - lay.sidePad, true, tag .. " cell right <= w - sidePad")
+                        assertEq(c.y >= areaTop, true, tag .. " cell y >= areaTop")
+                        assertEq(c.y + c.h <= areaBot, true, tag .. " cell bottom <= areaBot")
+                        for j = i + 1, #lay.cells do
+                            local c2 = lay.cells[j]
+                            local noOverlap = (c.x + c.w <= c2.x) or (c2.x + c2.w <= c.x)
+                                or (c.y + c.h <= c2.y) or (c2.y + c2.h <= c.y)
+                            assertEq(noOverlap, true, tag .. " cells do not overlap")
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
 
 -- 7. UTF-8 safe truncation helper & localized textual sensor payloads
 assertEq(Model.utf8PopLastChar("Open"), "Ope", "utf8PopLastChar pops ASCII char")
