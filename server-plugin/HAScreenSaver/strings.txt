@@ -1,137 +1,229 @@
 PLUGIN_HASCREENSAVER
+	DE	Home Assistant Bildschirmschoner
 	EN	Home Assistant Screensaver
+	FR	Économiseur d’écran Home Assistant
 
 PLUGIN_HASCREENSAVER_DESC
+	DE	Zustandsloser Live-Proxy für Home Assistant Sensorwerte und Radioweckerstatus zum HA-Screensaver-Applet auf Squeezebox-Radios, ohne langfristiges Zwischenspeichern.
 	EN	Stateless live proxy serving Home Assistant sensor states and radio alarm status to the HA Screensaver Squeezebox Radio applet, with zero long-term caching.
+	FR	Proxy dynamique sans état fournissant les états des capteurs Home Assistant et l’état des alarmes radio à l’applet HA Screensaver des Squeezebox Radios, sans mise en cache à long terme.
 
 PLUGIN_HASCREENSAVER_CONNECTION
+	DE	Home Assistant-Verbindung
 	EN	Home Assistant Connection
+	FR	Connexion à Home Assistant
 
 PLUGIN_HASCREENSAVER_HA_URL
+	DE	Home Assistant URL (optional)
 	EN	Home Assistant URL (optional)
+	FR	URL de Home Assistant (facultatif)
 
 PLUGIN_HASCREENSAVER_HA_URL_DESC
+	DE	Für die automatische Verbindung über die Home Assistant Supervisor-API leer lassen, wenn LMS als HA-Add-on ausgeführt wird. Andernfalls beispielsweise http://homeassistant.local:8123 eingeben
 	EN	Leave blank to auto-connect via the Home Assistant Supervisor API when LMS runs as an HA Add-on. Otherwise enter e.g. http://homeassistant.local:8123
+	FR	Laissez ce champ vide pour une connexion automatique via l’API Supervisor de Home Assistant lorsque LMS fonctionne comme add-on HA. Sinon, saisissez par exemple http://homeassistant.local:8123
 
 PLUGIN_HASCREENSAVER_HA_TOKEN
+	DE	Langlebiger Zugriffstoken (optional)
 	EN	Long-Lived Access Token (optional)
+	FR	Jeton d’accès longue durée (facultatif)
 
 PLUGIN_HASCREENSAVER_HA_TOKEN_DESC
+	DE	Bei Verwendung der Home Assistant Supervisor-API leer lassen. Nur erforderlich, wenn oben eine eigene Home Assistant URL festgelegt wurde.
 	EN	Leave blank when using the Home Assistant Supervisor API. Required only when a custom Home Assistant URL is set above.
+	FR	Laissez ce champ vide lorsque vous utilisez l’API Supervisor de Home Assistant. Requis uniquement lorsqu’une URL Home Assistant personnalisée est définie ci-dessus.
 
 PLUGIN_HASCREENSAVER_DISPLAY
+	DE	Anzeige &amp; Aktualisierung
 	EN	Display &amp; Polling
+	FR	Affichage et actualisation
 
 PLUGIN_HASCREENSAVER_POLL_INTERVAL
+	DE	Aktualisierungsintervall (Sekunden)
 	EN	Update Interval (seconds)
+	FR	Intervalle d’actualisation (secondes)
 
 PLUGIN_HASCREENSAVER_POLL_INTERVAL_DESC
+	DE	Häufigkeit, mit der aktive Bildschirmschoner neue Sensorwerte abrufen (10–300 Sekunden, Standard 60). Sensorwerte werden weder auf LMS noch auf dem Radio langfristig zwischengespeichert.
 	EN	How often active screensavers request fresh sensor states (10-300 seconds, default 60). No sensor values are cached long term on LMS or the radio.
+	FR	Fréquence à laquelle les économiseurs d’écran actifs demandent les états actuels des capteurs (10 à 300 secondes, 60 par défaut). Aucune valeur de capteur n’est mise en cache à long terme sur LMS ou sur la radio.
 
 PLUGIN_HASCREENSAVER_FONT_NAME
+	DE	Uhrschrift
 	EN	Clock Font
+	FR	Police de l’heure
 
 PLUGIN_HASCREENSAVER_FONT_NAME_DESC
+	DE	Standardschrift für die Digitaluhr auf dem Squeezebox Radio (pro Radio überschreibbar).
 	EN	Default font used for the digital clock on Squeezebox Radio (can be overridden per radio).
+	FR	Police par défaut utilisée pour l’heure numérique sur la Squeezebox Radio (peut être remplacée pour chaque radio).
 
 PLUGIN_HASCREENSAVER_ALERT_SECTION
+	DE	Alarm-/Türkontaktsensor — Globaler Standard (optional)
 	EN	Alert / Door Contact Sensor — Global Default (optional)
+	FR	Capteur d’alerte / contact de porte — Valeur globale par défaut (facultatif)
 
 PLUGIN_HASCREENSAVER_ALERT_ENTITY
+	DE	Alarm-Entitäts-ID
 	EN	Alert Entity ID
+	FR	ID de l’entité d’alerte
 
 PLUGIN_HASCREENSAVER_ALERT_ENTITY_DESC
+	DE	Optionaler globaler Standard für einen binary_sensor oder text_sensor (z. B. binary_sensor.front_door oder ein Vorlagensensor, der offene Türen auflistet). Wird bei „off“, „closed“, „none“, „ok“ oder einem leeren Wert automatisch ausgeblendet. Dieses Feld leer lassen, um Türalarme nur für bestimmte Radios über die Playereinstellungen zu aktivieren.
 	EN	Optional global default binary_sensor or text sensor (e.g. binary_sensor.front_door or a template sensor listing open doors). Hidden automatically when state is off, closed, none, ok, or empty. Leave blank here to enable door alerts only on specific radios via Player Settings.
+	FR	binary_sensor ou text_sensor global facultatif par défaut (par exemple binary_sensor.front_door ou un capteur modèle listant les portes ouvertes). Masqué automatiquement lorsque l’état est off, closed, none, ok ou vide. Laissez ce champ vide pour activer les alertes de porte uniquement sur certaines radios via les paramètres du lecteur.
 
 PLUGIN_HASCREENSAVER_ALERT_LABEL
+	DE	Alarm-Präfixtext
 	EN	Alert Prefix Label
+	FR	Préfixe d’alerte
 
 PLUGIN_HASCREENSAVER_WEATHER_SECTION
+	DE	Wettersymbol — Globaler Standard (optional)
 	EN	Weather Symbol — Global Default (optional)
+	FR	Symbole météo — Valeur globale par défaut (facultatif)
 
 PLUGIN_HASCREENSAVER_WEATHER_ENTITY
+	DE	Wetter-Entitäts-ID
 	EN	Weather Entity ID
+	FR	ID de l’entité météo
 
 PLUGIN_HASCREENSAVER_WEATHER_ENTITY_DESC
+	DE	Optionaler globaler Standard für eine Home Assistant Wetterentität (z. B. weather.home), um ein Wettersymbol mittig am unteren Rand des Bildschirmschoners anzuzeigen.
 	EN	Optional global default Home Assistant weather entity (e.g. weather.home) to display a weather icon in the bottom center of the screensaver.
+	FR	Entité météo Home Assistant globale facultative par défaut (par exemple weather.home) pour afficher une icône météo au bas et au centre de l’économiseur d’écran.
 
 PLUGIN_HASCREENSAVER_SENSORS_SECTION
+	DE	Home Assistant Sensoren — Globale Standards (bis zu 4)
 	EN	Home Assistant Sensors — Global Defaults (up to 4)
+	FR	Capteurs Home Assistant — Valeurs globales par défaut (jusqu’à 4)
 
 PLUGIN_HASCREENSAVER_SENSORS_DESC
+	DE	Konfigurieren Sie 1 bis 4 Standardsensoren für Radios ohne eigene Überschreibungen (unterstützt numerische Sensoren sowie binary_sensor, lock, cover usw., wie in Home Assistant lokalisiert dargestellt, z. B. Offen/Geschlossen oder Verriegelt/Entriegelt). Nicht verwendete Felder leer lassen; Dezimalstellen und Einheit werden bei nichtnumerischen Zuständen ignoriert, sofern keine eigene Einheit festgelegt ist. Das Radio passt das Layout automatisch an (1–2 Sensoren: einzelne Reihe; 3–4 Sensoren: 2×2-Raster).
 	EN	Configure 1 to 4 default sensors used by any radio without custom overrides (supports numeric sensors as well as binary_sensor, lock, cover, etc., shown localized like in Home Assistant, e.g. Open/Closed or Locked/Unlocked). Leave unused slots blank; decimals and unit are ignored for non-numeric states unless a custom unit override is set. The radio adapts its layout automatically (1-2 sensors: single row; 3-4 sensors: 2x2 grid).
+	FR	Configurez de 1 à 4 capteurs par défaut utilisés par toute radio sans remplacement personnalisé (capteurs numériques ainsi que binary_sensor, lock, cover, etc., affichés de façon localisée comme dans Home Assistant, par exemple Ouvert/Fermé ou Verrouillé/Déverrouillé). Laissez les emplacements inutilisés vides ; les décimales et l’unité sont ignorées pour les états non numériques, sauf si une unité personnalisée est définie. La radio adapte automatiquement sa disposition (1 à 2 capteurs : une seule ligne ; 3 à 4 capteurs : grille 2×2).
 
 PLUGIN_HASCREENSAVER_ENTITY_ID
+	DE	Entitäts-ID
 	EN	Entity ID
+	FR	ID d’entité
 
 PLUGIN_HASCREENSAVER_LABEL
+	DE	Kurzbezeichnung
 	EN	Short Label
+	FR	Libellé court
 
 PLUGIN_HASCREENSAVER_DECIMALS
+	DE	Dezimalstellen
 	EN	Decimals
+	FR	Décimales
 
 PLUGIN_HASCREENSAVER_UNIT
+	DE	Einheit überschreiben
 	EN	Unit Override
+	FR	Remplacement d’unité
 
 PLUGIN_HASCREENSAVER_REPO_SECTION
+	DE	Lokales Repository für Radio-Applets
 	EN	Local Radio Applet Repository
+	FR	Dépôt local des applets radio
 
 PLUGIN_HASCREENSAVER_REPO_DESC
+	DE	Diese URL unter Einstellungen &gt; Plugins &gt; Zusätzliche Repositorys hinzufügen, um den Bildschirmschoner über den Applet-Installer auf Squeezebox-Radios zu installieren:
 	EN	Add this URL under Settings &gt; Plugins &gt; Additional Repositories to install the screensaver onto Squeezebox Radios via Applet Installer:
+	FR	Ajoutez cette URL sous Paramètres &gt; Plugins &gt; Dépôts supplémentaires pour installer l’économiseur d’écran sur les Squeezebox Radios via l’Applet Installer :
 
 PLUGIN_HASCREENSAVER_PER_RADIO_SECTION
+	DE	Radio-spezifische Überschreibungen
 	EN	Per-Radio Overrides
+	FR	Remplacements par radio
 
 PLUGIN_HASCREENSAVER_PER_RADIO_DESC
+	DE	Einzelne Radios unter Einstellungen &gt; Player &gt; [Radio auswählen] &gt; Home Assistant Bildschirmschoner anpassen (oder in Material Skin: Playereinstellungen &gt; [Radio] &gt; Zusätzliche Einstellungen &gt; Home Assistant Bildschirmschoner). Radios ohne Überschreibungen verwenden die oben festgelegten globalen Standards.
 	EN	Customize individual radios under Settings &gt; Player &gt; [Select Radio] &gt; Home Assistant Screensaver (or in Material Skin: Player Settings &gt; [Radio] &gt; Extra Settings &gt; Home Assistant Screensaver). Any radio without overrides uses the Global Defaults above.
+	FR	Personnalisez les radios individuelles sous Paramètres &gt; Lecteur &gt; [Sélectionner la radio] &gt; Économiseur d’écran Home Assistant (ou dans Material Skin : Paramètres du lecteur &gt; [Radio] &gt; Paramètres supplémentaires &gt; Économiseur d’écran Home Assistant). Toute radio sans remplacement utilise les valeurs globales par défaut ci-dessus.
 
 PLUGIN_HASCREENSAVER_PLAYER_NAME
+	DE	Player
 	EN	Player
+	FR	Lecteur
 
 PLUGIN_HASCREENSAVER_PLAYER_MODEL
+	DE	Modell
 	EN	Model
+	FR	Modèle
 
 PLUGIN_HASCREENSAVER_PLAYER_CONFIG
+	DE	Aktive Konfiguration
 	EN	Active Configuration
+	FR	Configuration active
 
 PLUGIN_HASCREENSAVER_NO_PLAYERS
+	DE	Zurzeit sind keine Player verbunden.
 	EN	No players currently connected.
+	FR	Aucun lecteur actuellement connecté.
 
 PLUGIN_HASCREENSAVER_PLAYER_INTRO
+	DE	Radio-spezifische Bildschirmschoner-Überschreibungen
 	EN	Per-Radio Screensaver Overrides
+	FR	Remplacements de l’économiseur d’écran par radio
 
 PLUGIN_HASCREENSAVER_PLAYER_INTRO_DESC
+	DE	Passen Sie an, was dieses Radio anzeigt. Jede Entitäts-ID leer lassen, um den globalen Standard zu übernehmen, eine Entitäts-ID eingeben, um diesen Slot nur für dieses Radio zu überschreiben, oder „none“ eingeben, um einen globalen Standard für dieses Radio auszublenden.
 	EN	Customize what this radio displays. Leave any Entity ID blank to inherit the Global Default, enter an Entity ID to override that slot for this radio only, or enter "none" to hide a Global Default on this radio.
+	FR	Personnalisez l’affichage de cette radio. Laissez toute ID d’entité vide pour utiliser la valeur globale par défaut, saisissez une ID d’entité pour remplacer cet emplacement uniquement sur cette radio, ou saisissez « none » pour masquer une valeur globale par défaut sur cette radio.
 
 PLUGIN_HASCREENSAVER_PLAYER_STATUS
+	DE	Aktive Überschreibungen
 	EN	Active Overrides
+	FR	Remplacements actifs
 
 PLUGIN_HASCREENSAVER_PLAYER_FONT_DESC
+	DE	Optional die Uhrschrift für dieses Radio überschreiben oder den globalen Standard verwenden.
 	EN	Optionally override the clock font for this radio, or use the Global Default.
+	FR	Vous pouvez remplacer la police de l’heure pour cette radio ou utiliser la valeur globale par défaut.
 
 PLUGIN_HASCREENSAVER_USE_GLOBAL_DEFAULT
+	DE	Globalen Standard verwenden
 	EN	Use Global Default
+	FR	Utiliser la valeur globale par défaut
 
 PLUGIN_HASCREENSAVER_PLAYER_WEATHER_DESC
+	DE	Leer lassen, um die globale Standard-Wetterentität zu übernehmen, eine weather.*-Entität zum Überschreiben eingeben oder „none“ eingeben, um das Wetter für dieses Radio auszublenden.
 	EN	Leave blank to inherit the Global Default weather entity, enter a weather.* entity to override, or enter "none" to hide weather on this radio.
+	FR	Laissez ce champ vide pour utiliser l’entité météo globale par défaut, saisissez une entité weather.* pour la remplacer, ou saisissez « none » pour masquer la météo sur cette radio.
 
 PLUGIN_HASCREENSAVER_PLAYER_ALERT_DESC
+	DE	Leer lassen, um den globalen Standardalarm zu übernehmen, eine Entitäts-ID (z. B. sensor.open_doors) eingeben, um Alarme für dieses Radio zu aktivieren oder zu überschreiben, oder „none“ eingeben, um einen globalen Standardalarm auszublenden.
 	EN	Leave blank to inherit the Global Default alert, enter an entity ID (e.g. sensor.open_doors) to enable or override alerts on this radio, or enter "none" to hide a Global Default alert.
+	FR	Laissez ce champ vide pour utiliser l’alerte globale par défaut, saisissez une ID d’entité (par exemple sensor.open_doors) pour activer ou remplacer les alertes sur cette radio, ou saisissez « none » pour masquer une alerte globale par défaut.
 
 PLUGIN_HASCREENSAVER_PLAYER_SENSORS_DESC
+	DE	Eine Reihe leer lassen, um diesen globalen Standard-Slot zu übernehmen, eine Entitäts-ID (z. B. sensor.*, binary_sensor.*, lock.*, cover.*) eingeben, um diesen Slot für dieses Radio zu überschreiben, oder „none“ eingeben, um diesen globalen Standard-Slot auszublenden.
 	EN	Leave a row blank to inherit that Global Default slot, enter an Entity ID (e.g. sensor.*, binary_sensor.*, lock.*, cover.*) to override that slot for this radio, or enter "none" to hide that Global Default slot.
+	FR	Laissez une ligne vide pour utiliser l’emplacement global par défaut correspondant, saisissez une ID d’entité (par exemple sensor.*, binary_sensor.*, lock.*, cover.*) pour remplacer cet emplacement sur cette radio, ou saisissez « none » pour masquer cet emplacement global par défaut.
 
 PLUGIN_HASCREENSAVER_GLOBAL_DEFAULT_LABEL
+	DE	Globaler Standard
 	EN	Global default
+	FR	Valeur globale par défaut
 
 PLUGIN_HASCREENSAVER_NOT_SET
+	DE	nicht festgelegt
 	EN	not set
+	FR	non défini
 
 PLUGIN_HASCREENSAVER_PLAYER_RESET_SECTION
+	DE	Überschreibungen zurücksetzen
 	EN	Reset Overrides
+	FR	Réinitialiser les remplacements
 
 PLUGIN_HASCREENSAVER_PLAYER_RESET_DESC
+	DE	Alle benutzerdefinierten Einstellungen dieses Radios löschen, damit es zu den globalen Standards zurückkehrt.
 	EN	Clear all custom settings on this radio so it returns to Global Defaults.
+	FR	Effacer tous les paramètres personnalisés de cette radio afin qu’elle retrouve les valeurs globales par défaut.
 
 PLUGIN_HASCREENSAVER_PLAYER_RESET_LABEL
+	DE	Beim Anwenden alle Überschreibungen dieses Radios auf die globalen Standards zurücksetzen
 	EN	Reset all overrides on this radio back to Global Defaults on Apply
+	FR	Réinitialiser tous les remplacements de cette radio vers les valeurs globales par défaut lors de l’application
