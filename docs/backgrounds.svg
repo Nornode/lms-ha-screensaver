@@ -1,0 +1,302 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="646" viewBox="0 0 1400 646">
+  <defs>
+    <linearGradient id="bg_slate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1c222c"/>
+      <stop offset="100%" stop-color="#06080c"/>
+    </linearGradient>
+    <linearGradient id="bg_black" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#000000"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </linearGradient>
+    <linearGradient id="bg_midnight" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0e1c3a"/>
+      <stop offset="100%" stop-color="#040814"/>
+    </linearGradient>
+    <linearGradient id="bg_ember" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#261812"/>
+      <stop offset="100%" stop-color="#0a0605"/>
+    </linearGradient>
+    <linearGradient id="bg_forest" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#10221c"/>
+      <stop offset="100%" stop-color="#050a08"/>
+    </linearGradient>
+    <linearGradient id="bg_graphite" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3e4044"/>
+      <stop offset="100%" stop-color="#18191c"/>
+    </linearGradient>
+    <linearGradient id="bg_velvet" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3c0e17"/>
+      <stop offset="100%" stop-color="#120407"/>
+    </linearGradient>
+    <linearGradient id="bg_silver" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dfe3e8"/>
+      <stop offset="100%" stop-color="#b6bec8"/>
+    </linearGradient></defs>
+  <rect width="100%" height="100%" fill="#0d1117"/>
+  <text x="24" y="30" fill="#f0f6fc" font-family="Helvetica Neue, Arial, sans-serif" font-size="18" font-weight="700">Proposed v2.0.0 Background Presets (320×240 Squeezebox Radio Preview)</text>
+  
+    <g transform="translate(24,58)">
+      <text x="0" y="-10" fill="#e6edf3" font-family="Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="700">1. Slate Charcoal (Default)</text>
+      <rect x="0" y="0" width="320" height="240" rx="8" fill="url(#bg_slate)" stroke="#444c56" stroke-width="1.5"/>
+
+      <!-- Alarm badge top-right -->
+      <text x="308" y="18" text-anchor="end" fill="#8e98a8" font-family="Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700">07:00</text>
+
+      <!-- Clock with subtle shadow -->
+      <text x="162" y="122" text-anchor="middle" fill="rgba(0,0,0,0.65)" font-family="Helvetica Neue, Arial, sans-serif" font-size="92" font-weight="700">21:16</text>
+      <text x="160" y="120" text-anchor="middle" fill="#ffffff" font-family="Helvetica Neue, Arial, sans-serif" font-size="92" font-weight="700">21:16</text>
+
+      <!-- Bottom telemetry band -->
+      <path d="M 1 168 H 319 V 232 Q 319 239 312 239 H 8 Q 1 239 1 232 Z" fill="rgba(4,6,10,0.55)"/>
+      <rect x="10" y="168" width="300" height="1" fill="#2a3240"/>
+
+      <!-- Left sensor -->
+      <text x="14" y="191" fill="#7e8898" font-family="Helvetica Neue, Arial, sans-serif" font-size="11">Outside</text>
+      <text x="14" y="222" fill="#f5f7fa" font-family="Helvetica Neue, Arial, sans-serif" font-size="27" font-weight="700">2.9</text>
+      <text x="58" y="212" fill="#8e98a8" font-family="Helvetica Neue, Arial, sans-serif" font-size="13">°C</text>
+
+      <!-- Center weather cloud -->
+      <g transform="translate(142, 186)" fill="#d8e4f2">
+        <path d="M10 22h18a7 7 0 0 0 1-13.9A9.5 9.5 0 0 0 10.5 6 7.5 7.5 0 0 0 10 22z"/>
+        <circle cx="13" cy="27" r="1.8" fill="#7dd3fc"/>
+        <circle cx="19" cy="29" r="1.8" fill="#7dd3fc"/>
+        <circle cx="25" cy="27" r="1.8" fill="#7dd3fc"/>
+      </g>
+
+      <!-- Right sensor -->
+      <text x="306" y="191" text-anchor="end" fill="#7e8898" font-family="Helvetica Neue, Arial, sans-serif" font-size="11">Grid</text>
+      <text x="282" y="222" text-anchor="end" fill="#f5f7fa" font-family="Helvetica Neue, Arial, sans-serif" font-size="27" font-weight="700">0.6</text>
+      <text x="306" y="212" text-anchor="end" fill="#8e98a8" font-family="Helvetica Neue, Arial, sans-serif" font-size="13">kW</text>
+    </g>
+    <g transform="translate(368,58)">
+      <text x="0" y="-10" fill="#e6edf3" font-family="Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="700">2. Pure Black (Night)</text>
+      <rect x="0" y="0" width="320" height="240" rx="8" fill="url(#bg_black)" stroke="#444c56" stroke-width="1.5"/>
+
+      <!-- Alarm badge top-right -->
+      <text x="308" y="18" text-anchor="end" fill="#8e98a8" font-family="Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700">07:00</text>
+
+      <!-- Clock with subtle shadow -->
+      <text x="162" y="122" text-anchor="middle" fill="rgba(0,0,0,0.65)" font-family="Helvetica Neue, Arial, sans-serif" font-size="92" font-weight="700">21:16</text>
+      <text x="160" y="120" text-anchor="middle" fill="#ffffff" font-family="Helvetica Neue, Arial, sans-serif" font-size="92" font-weight="700">21:16</text>
+
+      <!-- Bottom telemetry band -->
+      <path d="M 1 168 H 319 V 232 Q 319 239 312 239 H 8 Q 1 239 1 232 Z" fill="rgba(12,14,18,0.45)"/>
+      <rect x="10" y="168" width="300" height="1" fill="#1f242c"/>
+
+      <!-- Left sensor -->
+      <text x="14" y="191" fill="#7e8898" font-family="Helvetica Neue, Arial, sans-serif" font-size="11">Outside</text>
+      <text x="14" y="222" fill="#f5f7fa" font-family="Helvetica Neue, Arial, sans-serif" font-size="27" font-weight="700">2.9</text>
+      <text x="58" y="212" fill="#8e98a8" font-family="Helvetica Neue, Arial, sans-serif" font-size="13">°C</text>
+
+      <!-- Center weather cloud -->
+      <g transform="translate(142, 186)" fill="#d8e4f2">
+        <path d="M10 22h18a7 7 0 0 0 1-13.9A9.5 9.5 0 0 0 10.5 6 7.5 7.5 0 0 0 10 22z"/>
+        <circle cx="13" cy="27" r="1.8" fill="#7dd3fc"/>
+        <circle cx="19" cy="29" r="1.8" fill="#7dd3fc"/>
+        <circle cx="25" cy="27" r="1.8" fill="#7dd3fc"/>
+      </g>
+
+      <!-- Right sensor -->
+      <text x="306" y="191" text-anchor="end" fill="#7e8898" font-family="Helvetica Neue, Arial, sans-serif" font-size="11">Grid</text>
+      <text x="282" y="222" text-anchor="end" fill="#f5f7fa" font-family="Helvetica Neue, Arial, sans-serif" font-size="27" font-weight="700">0.6</text>
+      <text x="306" y="212" text-anchor="end" fill="#8e98a8" font-family="Helvetica Neue, Arial, sans-serif" font-size="13">kW</text>
+    </g>
+    <g transform="translate(712,58)">
+      <text x="0" y="-10" fill="#e6edf3" font-family="Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="700">3. Midnight Navy</text>
+      <rect x="0" y="0" width="320" height="240" rx="8" fill="url(#bg_midnight)" stroke="#444c56" stroke-width="1.5"/>
+
+      <!-- Alarm badge top-right -->
+      <text x="308" y="18" text-anchor="end" fill="#8e98a8" font-family="Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700">07:00</text>
+
+      <!-- Clock with subtle shadow -->
+      <text x="162" y="122" text-anchor="middle" fill="rgba(0,0,0,0.65)" font-family="Helvetica Neue, Arial, sans-serif" font-size="92" font-weight="700">21:16</text>
+      <text x="160" y="120" text-anchor="middle" fill="#ffffff" font-family="Helvetica Neue, Arial, sans-serif" font-size="92" font-weight="700">21:16</text>
+
+      <!-- Bottom telemetry band -->
+      <path d="M 1 168 H 319 V 232 Q 319 239 312 239 H 8 Q 1 239 1 232 Z" fill="rgba(3,6,16,0.55)"/>
+      <rect x="10" y="168" width="300" height="1" fill="#243b66"/>
+
+      <!-- Left sensor -->
+      <text x="14" y="191" fill="#7e8898" font-family="Helvetica Neue, Arial, sans-serif" font-size="11">Outside</text>
+      <text x="14" y="222" fill="#f5f7fa" font-family="Helvetica Neue, Arial, sans-serif" font-size="27" font-weight="700">2.9</text>
+      <text x="58" y="212" fill="#8e98a8" font-family="Helvetica Neue, Arial, sans-serif" font-size="13">°C</text>
+
+      <!-- Center weather cloud -->
+      <g transform="translate(142, 186)" fill="#d8e4f2">
+        <path d="M10 22h18a7 7 0 0 0 1-13.9A9.5 9.5 0 0 0 10.5 6 7.5 7.5 0 0 0 10 22z"/>
+        <circle cx="13" cy="27" r="1.8" fill="#7dd3fc"/>
+        <circle cx="19" cy="29" r="1.8" fill="#7dd3fc"/>
+        <circle cx="25" cy="27" r="1.8" fill="#7dd3fc"/>
+      </g>
+
+      <!-- Right sensor -->
+      <text x="306" y="191" text-anchor="end" fill="#7e8898" font-family="Helvetica Neue, Arial, sans-serif" font-size="11">Grid</text>
+      <text x="282" y="222" text-anchor="end" fill="#f5f7fa" font-family="Helvetica Neue, Arial, sans-serif" font-size="27" font-weight="700">0.6</text>
+      <text x="306" y="212" text-anchor="end" fill="#8e98a8" font-family="Helvetica Neue, Arial, sans-serif" font-size="13">kW</text>
+    </g>
+    <g transform="translate(1056,58)">
+      <text x="0" y="-10" fill="#e6edf3" font-family="Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="700">4. Warm Espresso</text>
+      <rect x="0" y="0" width="320" height="240" rx="8" fill="url(#bg_ember)" stroke="#444c56" stroke-width="1.5"/>
+
+      <!-- Alarm badge top-right -->
+      <text x="308" y="18" text-anchor="end" fill="#8e98a8" font-family="Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700">07:00</text>
+
+      <!-- Clock with subtle shadow -->
+      <text x="162" y="122" text-anchor="middle" fill="rgba(0,0,0,0.65)" font-family="Helvetica Neue, Arial, sans-serif" font-size="92" font-weight="700">21:16</text>
+      <text x="160" y="120" text-anchor="middle" fill="#ffffff" font-family="Helvetica Neue, Arial, sans-serif" font-size="92" font-weight="700">21:16</text>
+
+      <!-- Bottom telemetry band -->
+      <path d="M 1 168 H 319 V 232 Q 319 239 312 239 H 8 Q 1 239 1 232 Z" fill="rgba(8,4,3,0.55)"/>
+      <rect x="10" y="168" width="300" height="1" fill="#4a3226"/>
+
+      <!-- Left sensor -->
+      <text x="14" y="191" fill="#7e8898" font-family="Helvetica Neue, Arial, sans-serif" font-size="11">Outside</text>
+      <text x="14" y="222" fill="#f5f7fa" font-family="Helvetica Neue, Arial, sans-serif" font-size="27" font-weight="700">2.9</text>
+      <text x="58" y="212" fill="#8e98a8" font-family="Helvetica Neue, Arial, sans-serif" font-size="13">°C</text>
+
+      <!-- Center weather cloud -->
+      <g transform="translate(142, 186)" fill="#d8e4f2">
+        <path d="M10 22h18a7 7 0 0 0 1-13.9A9.5 9.5 0 0 0 10.5 6 7.5 7.5 0 0 0 10 22z"/>
+        <circle cx="13" cy="27" r="1.8" fill="#7dd3fc"/>
+        <circle cx="19" cy="29" r="1.8" fill="#7dd3fc"/>
+        <circle cx="25" cy="27" r="1.8" fill="#7dd3fc"/>
+      </g>
+
+      <!-- Right sensor -->
+      <text x="306" y="191" text-anchor="end" fill="#7e8898" font-family="Helvetica Neue, Arial, sans-serif" font-size="11">Grid</text>
+      <text x="282" y="222" text-anchor="end" fill="#f5f7fa" font-family="Helvetica Neue, Arial, sans-serif" font-size="27" font-weight="700">0.6</text>
+      <text x="306" y="212" text-anchor="end" fill="#8e98a8" font-family="Helvetica Neue, Arial, sans-serif" font-size="13">kW</text>
+    </g>
+    <g transform="translate(24,340)">
+      <text x="0" y="-10" fill="#e6edf3" font-family="Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="700">5. Deep Pine</text>
+      <rect x="0" y="0" width="320" height="240" rx="8" fill="url(#bg_forest)" stroke="#444c56" stroke-width="1.5"/>
+
+      <!-- Alarm badge top-right -->
+      <text x="308" y="18" text-anchor="end" fill="#8e98a8" font-family="Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700">07:00</text>
+
+      <!-- Clock with subtle shadow -->
+      <text x="162" y="122" text-anchor="middle" fill="rgba(0,0,0,0.65)" font-family="Helvetica Neue, Arial, sans-serif" font-size="92" font-weight="700">21:16</text>
+      <text x="160" y="120" text-anchor="middle" fill="#ffffff" font-family="Helvetica Neue, Arial, sans-serif" font-size="92" font-weight="700">21:16</text>
+
+      <!-- Bottom telemetry band -->
+      <path d="M 1 168 H 319 V 232 Q 319 239 312 239 H 8 Q 1 239 1 232 Z" fill="rgba(3,8,6,0.55)"/>
+      <rect x="10" y="168" width="300" height="1" fill="#234237"/>
+
+      <!-- Left sensor -->
+      <text x="14" y="191" fill="#7e8898" font-family="Helvetica Neue, Arial, sans-serif" font-size="11">Outside</text>
+      <text x="14" y="222" fill="#f5f7fa" font-family="Helvetica Neue, Arial, sans-serif" font-size="27" font-weight="700">2.9</text>
+      <text x="58" y="212" fill="#8e98a8" font-family="Helvetica Neue, Arial, sans-serif" font-size="13">°C</text>
+
+      <!-- Center weather cloud -->
+      <g transform="translate(142, 186)" fill="#d8e4f2">
+        <path d="M10 22h18a7 7 0 0 0 1-13.9A9.5 9.5 0 0 0 10.5 6 7.5 7.5 0 0 0 10 22z"/>
+        <circle cx="13" cy="27" r="1.8" fill="#7dd3fc"/>
+        <circle cx="19" cy="29" r="1.8" fill="#7dd3fc"/>
+        <circle cx="25" cy="27" r="1.8" fill="#7dd3fc"/>
+      </g>
+
+      <!-- Right sensor -->
+      <text x="306" y="191" text-anchor="end" fill="#7e8898" font-family="Helvetica Neue, Arial, sans-serif" font-size="11">Grid</text>
+      <text x="282" y="222" text-anchor="end" fill="#f5f7fa" font-family="Helvetica Neue, Arial, sans-serif" font-size="27" font-weight="700">0.6</text>
+      <text x="306" y="212" text-anchor="end" fill="#8e98a8" font-family="Helvetica Neue, Arial, sans-serif" font-size="13">kW</text>
+    </g>
+    <g transform="translate(368,340)">
+      <text x="0" y="-10" fill="#e6edf3" font-family="Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="700">6. Graphite Mono</text>
+      <rect x="0" y="0" width="320" height="240" rx="8" fill="url(#bg_graphite)" stroke="#444c56" stroke-width="1.5"/>
+
+      <!-- Alarm badge top-right -->
+      <text x="308" y="18" text-anchor="end" fill="#b2b8c2" font-family="Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700">07:00</text>
+
+      <!-- Clock with subtle shadow -->
+      <text x="162" y="122" text-anchor="middle" fill="rgba(0,0,0,0.65)" font-family="Helvetica Neue, Arial, sans-serif" font-size="92" font-weight="700">21:16</text>
+      <text x="160" y="120" text-anchor="middle" fill="#ffffff" font-family="Helvetica Neue, Arial, sans-serif" font-size="92" font-weight="700">21:16</text>
+
+      <!-- Bottom telemetry band -->
+      <path d="M 1 168 H 319 V 232 Q 319 239 312 239 H 8 Q 1 239 1 232 Z" fill="rgba(14,14,16,0.55)"/>
+      <rect x="10" y="168" width="300" height="1" fill="#56585e"/>
+
+      <!-- Left sensor -->
+      <text x="14" y="191" fill="#a4abb5" font-family="Helvetica Neue, Arial, sans-serif" font-size="11">Outside</text>
+      <text x="14" y="222" fill="#f5f7fa" font-family="Helvetica Neue, Arial, sans-serif" font-size="27" font-weight="700">2.9</text>
+      <text x="58" y="212" fill="#b2b8c2" font-family="Helvetica Neue, Arial, sans-serif" font-size="13">°C</text>
+
+      <!-- Center weather cloud -->
+      <g transform="translate(142, 186)" fill="#e2e6ec">
+        <path d="M10 22h18a7 7 0 0 0 1-13.9A9.5 9.5 0 0 0 10.5 6 7.5 7.5 0 0 0 10 22z"/>
+        <circle cx="13" cy="27" r="1.8" fill="#7dd3fc"/>
+        <circle cx="19" cy="29" r="1.8" fill="#7dd3fc"/>
+        <circle cx="25" cy="27" r="1.8" fill="#7dd3fc"/>
+      </g>
+
+      <!-- Right sensor -->
+      <text x="306" y="191" text-anchor="end" fill="#a4abb5" font-family="Helvetica Neue, Arial, sans-serif" font-size="11">Grid</text>
+      <text x="282" y="222" text-anchor="end" fill="#f5f7fa" font-family="Helvetica Neue, Arial, sans-serif" font-size="27" font-weight="700">0.6</text>
+      <text x="306" y="212" text-anchor="end" fill="#b2b8c2" font-family="Helvetica Neue, Arial, sans-serif" font-size="13">kW</text>
+    </g>
+    <g transform="translate(712,340)">
+      <text x="0" y="-10" fill="#e6edf3" font-family="Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="700">7. Velvet Dark Red</text>
+      <rect x="0" y="0" width="320" height="240" rx="8" fill="url(#bg_velvet)" stroke="#444c56" stroke-width="1.5"/>
+
+      <!-- Alarm badge top-right -->
+      <text x="308" y="18" text-anchor="end" fill="#c29ea5" font-family="Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700">07:00</text>
+
+      <!-- Clock with subtle shadow -->
+      <text x="162" y="122" text-anchor="middle" fill="rgba(0,0,0,0.70)" font-family="Helvetica Neue, Arial, sans-serif" font-size="92" font-weight="700">21:16</text>
+      <text x="160" y="120" text-anchor="middle" fill="#ffffff" font-family="Helvetica Neue, Arial, sans-serif" font-size="92" font-weight="700">21:16</text>
+
+      <!-- Bottom telemetry band -->
+      <path d="M 1 168 H 319 V 232 Q 319 239 312 239 H 8 Q 1 239 1 232 Z" fill="rgba(12,2,4,0.58)"/>
+      <rect x="10" y="168" width="300" height="1" fill="#64202d"/>
+
+      <!-- Left sensor -->
+      <text x="14" y="191" fill="#b38c94" font-family="Helvetica Neue, Arial, sans-serif" font-size="11">Outside</text>
+      <text x="14" y="222" fill="#faf5f6" font-family="Helvetica Neue, Arial, sans-serif" font-size="27" font-weight="700">2.9</text>
+      <text x="58" y="212" fill="#c29ea5" font-family="Helvetica Neue, Arial, sans-serif" font-size="13">°C</text>
+
+      <!-- Center weather cloud -->
+      <g transform="translate(142, 186)" fill="#f0dfe2">
+        <path d="M10 22h18a7 7 0 0 0 1-13.9A9.5 9.5 0 0 0 10.5 6 7.5 7.5 0 0 0 10 22z"/>
+        <circle cx="13" cy="27" r="1.8" fill="#fda4af"/>
+        <circle cx="19" cy="29" r="1.8" fill="#fda4af"/>
+        <circle cx="25" cy="27" r="1.8" fill="#fda4af"/>
+      </g>
+
+      <!-- Right sensor -->
+      <text x="306" y="191" text-anchor="end" fill="#b38c94" font-family="Helvetica Neue, Arial, sans-serif" font-size="11">Grid</text>
+      <text x="282" y="222" text-anchor="end" fill="#faf5f6" font-family="Helvetica Neue, Arial, sans-serif" font-size="27" font-weight="700">0.6</text>
+      <text x="306" y="212" text-anchor="end" fill="#c29ea5" font-family="Helvetica Neue, Arial, sans-serif" font-size="13">kW</text>
+    </g>
+    <g transform="translate(1056,340)">
+      <text x="0" y="-10" fill="#e6edf3" font-family="Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="700">8. Bright Silver (White Radio)</text>
+      <rect x="0" y="0" width="320" height="240" rx="8" fill="url(#bg_silver)" stroke="#d0d7de" stroke-width="4"/>
+
+      <!-- Alarm badge top-right -->
+      <text x="308" y="18" text-anchor="end" fill="#3c4552" font-family="Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700">07:00</text>
+
+      <!-- Clock with subtle shadow -->
+      <text x="162" y="122" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-family="Helvetica Neue, Arial, sans-serif" font-size="92" font-weight="700">21:16</text>
+      <text x="160" y="120" text-anchor="middle" fill="#14181f" font-family="Helvetica Neue, Arial, sans-serif" font-size="92" font-weight="700">21:16</text>
+
+      <!-- Bottom telemetry band -->
+      <path d="M 1 168 H 319 V 232 Q 319 239 312 239 H 8 Q 1 239 1 232 Z" fill="rgba(165,174,186,0.45)"/>
+      <rect x="10" y="168" width="300" height="1" fill="#8f99a6"/>
+
+      <!-- Left sensor -->
+      <text x="14" y="191" fill="#4a5462" font-family="Helvetica Neue, Arial, sans-serif" font-size="11">Outside</text>
+      <text x="14" y="222" fill="#161b22" font-family="Helvetica Neue, Arial, sans-serif" font-size="27" font-weight="700">2.9</text>
+      <text x="58" y="212" fill="#3c4552" font-family="Helvetica Neue, Arial, sans-serif" font-size="13">°C</text>
+
+      <!-- Center weather cloud -->
+      <g transform="translate(142, 186)" fill="#334155">
+        <path d="M10 22h18a7 7 0 0 0 1-13.9A9.5 9.5 0 0 0 10.5 6 7.5 7.5 0 0 0 10 22z"/>
+        <circle cx="13" cy="27" r="1.8" fill="#0284c7"/>
+        <circle cx="19" cy="29" r="1.8" fill="#0284c7"/>
+        <circle cx="25" cy="27" r="1.8" fill="#0284c7"/>
+      </g>
+
+      <!-- Right sensor -->
+      <text x="306" y="191" text-anchor="end" fill="#4a5462" font-family="Helvetica Neue, Arial, sans-serif" font-size="11">Grid</text>
+      <text x="282" y="222" text-anchor="end" fill="#161b22" font-family="Helvetica Neue, Arial, sans-serif" font-size="27" font-weight="700">0.6</text>
+      <text x="306" y="212" text-anchor="end" fill="#3c4552" font-family="Helvetica Neue, Arial, sans-serif" font-size="13">kW</text>
+    </g>
+</svg>

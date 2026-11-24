@@ -72,6 +72,96 @@
 [% END %]
 
 [% WRAPPER settingSection %]
+	[% WRAPPER settingGroup title="PLUGIN_HASCREENSAVER_APPEARANCE_SECTION" desc="PLUGIN_HASCREENSAVER_APPEARANCE_DESC" %]
+		<table>
+			<tr>
+				<td><label for="pref_background_style">[% "PLUGIN_HASCREENSAVER_BACKGROUND_STYLE" | string %]:</label></td>
+				<td>
+					<select class="stdedit" name="pref_background_style" id="pref_background_style">
+						<option value="slate" [% IF !prefs.background_style || prefs.background_style == 'slate' %]selected[% END %]>[% "PLUGIN_HASCREENSAVER_BG_SLATE" | string %]</option>
+						<option value="black" [% IF prefs.background_style == 'black' %]selected[% END %]>[% "PLUGIN_HASCREENSAVER_BG_BLACK" | string %]</option>
+						<option value="midnight" [% IF prefs.background_style == 'midnight' %]selected[% END %]>[% "PLUGIN_HASCREENSAVER_BG_MIDNIGHT" | string %]</option>
+						<option value="ember" [% IF prefs.background_style == 'ember' %]selected[% END %]>[% "PLUGIN_HASCREENSAVER_BG_EMBER" | string %]</option>
+						<option value="forest" [% IF prefs.background_style == 'forest' %]selected[% END %]>[% "PLUGIN_HASCREENSAVER_BG_FOREST" | string %]</option>
+						<option value="graphite" [% IF prefs.background_style == 'graphite' %]selected[% END %]>[% "PLUGIN_HASCREENSAVER_BG_GRAPHITE" | string %]</option>
+						<option value="velvet" [% IF prefs.background_style == 'velvet' %]selected[% END %]>[% "PLUGIN_HASCREENSAVER_BG_VELVET" | string %]</option>
+						<option value="silver" [% IF prefs.background_style == 'silver' %]selected[% END %]>[% "PLUGIN_HASCREENSAVER_BG_SILVER" | string %]</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td><label for="pref_weather_size">[% "PLUGIN_HASCREENSAVER_WEATHER_SIZE" | string %]:</label></td>
+				<td>
+					<select class="stdedit" name="pref_weather_size" id="pref_weather_size">
+						<option value="large" [% IF !prefs.weather_size || prefs.weather_size == 'large' %]selected[% END %]>[% "PLUGIN_HASCREENSAVER_WEATHER_SIZE_LARGE" | string %]</option>
+						<option value="compact" [% IF prefs.weather_size == 'compact' %]selected[% END %]>[% "PLUGIN_HASCREENSAVER_WEATHER_SIZE_COMPACT" | string %]</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td><label for="pref_label_size">[% "PLUGIN_HASCREENSAVER_LABEL_SIZE" | string %]:</label></td>
+				<td>
+					<select class="stdedit" name="pref_label_size" id="pref_label_size">
+						<option value="default" [% IF !prefs.label_size || prefs.label_size == 'default' %]selected[% END %]>[% "PLUGIN_HASCREENSAVER_SIZE_DEFAULT" | string %]</option>
+						<option value="medium" [% IF prefs.label_size == 'medium' %]selected[% END %]>[% "PLUGIN_HASCREENSAVER_SIZE_MEDIUM" | string %]</option>
+						<option value="large" [% IF prefs.label_size == 'large' %]selected[% END %]>[% "PLUGIN_HASCREENSAVER_SIZE_LARGE" | string %]</option>
+					</select>
+					&nbsp;
+					<label for="pref_label_bold">[% "PLUGIN_HASCREENSAVER_LABEL_WEIGHT" | string %]:</label>
+					<select class="stdedit" name="pref_label_bold" id="pref_label_bold">
+						<option value="0" [% IF !prefs.label_bold || prefs.label_bold == '0' %]selected[% END %]>[% "PLUGIN_HASCREENSAVER_WEIGHT_REGULAR" | string %]</option>
+						<option value="1" [% IF prefs.label_bold == '1' %]selected[% END %]>[% "PLUGIN_HASCREENSAVER_WEIGHT_BOLD" | string %]</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td><label for="pref_value_size">[% "PLUGIN_HASCREENSAVER_VALUE_SIZE" | string %]:</label></td>
+				<td>
+					<select class="stdedit" name="pref_value_size" id="pref_value_size">
+						<option value="compact" [% IF prefs.value_size == 'compact' %]selected[% END %]>[% "PLUGIN_HASCREENSAVER_SIZE_COMPACT" | string %]</option>
+						<option value="default" [% IF !prefs.value_size || prefs.value_size == 'default' %]selected[% END %]>[% "PLUGIN_HASCREENSAVER_SIZE_DEFAULT" | string %]</option>
+						<option value="large" [% IF prefs.value_size == 'large' %]selected[% END %]>[% "PLUGIN_HASCREENSAVER_SIZE_LARGE" | string %]</option>
+					</select>
+					&nbsp;
+					<label for="pref_clock_size">[% "PLUGIN_HASCREENSAVER_CLOCK_SIZE" | string %]:</label>
+					<select class="stdedit" name="pref_clock_size" id="pref_clock_size">
+						<option value="compact" [% IF prefs.clock_size == 'compact' %]selected[% END %]>[% "PLUGIN_HASCREENSAVER_SIZE_COMPACT" | string %]</option>
+						<option value="default" [% IF !prefs.clock_size || prefs.clock_size == 'default' %]selected[% END %]>[% "PLUGIN_HASCREENSAVER_SIZE_DEFAULT" | string %]</option>
+						<option value="large" [% IF prefs.clock_size == 'large' %]selected[% END %]>[% "PLUGIN_HASCREENSAVER_SIZE_LARGE" | string %]</option>
+					</select>
+				</td>
+			</tr>
+		</table>
+		<br/>
+		<table>
+			<tr>
+				<th align="left">[% "PLUGIN_HASCREENSAVER_COLOR_ELEMENT" | string %]</th>
+				<th align="left">[% "PLUGIN_HASCREENSAVER_COLOR_HEX" | string %]</th>
+			</tr>
+			[% SET color_rows = [
+				{ key => 'clock_color', label => 'PLUGIN_HASCREENSAVER_CLOCK_COLOR', def => '#FFFFFF' },
+				{ key => 'value_color', label => 'PLUGIN_HASCREENSAVER_VALUE_COLOR', def => '#F5F7FA' },
+				{ key => 'label_color', label => 'PLUGIN_HASCREENSAVER_LABEL_COLOR', def => '#7E8898' },
+				{ key => 'unit_color',  label => 'PLUGIN_HASCREENSAVER_UNIT_COLOR',  def => '#8E98A8' }
+			] %]
+			[% FOREACH cr IN color_rows %]
+				[% SET ckey = cr.key %]
+				[% SET cval = prefs.$ckey %]
+				[% SET swatch = cval ? cval : cr.def %]
+				<tr>
+					<td><label for="pref_[% ckey %]">[% cr.label | string %]:</label></td>
+					<td>
+						<input type="text" class="stdedit" name="pref_[% ckey %]" id="pref_[% ckey %]" value="[% cval | html %]" size="9" maxlength="7" pattern="#?[0-9A-Fa-f]{6}" placeholder="[% cr.def %]" oninput="if(/^#[0-9A-Fa-f]{6}$/.test(this.value)){document.getElementById('picker_[% ckey %]').value=this.value;}" />
+						<input type="color" id="picker_[% ckey %]" value="[% swatch | html %]" style="vertical-align:middle;width:28px;height:22px;padding:0;border:1px solid #888;" oninput="document.getElementById('pref_[% ckey %]').value=this.value.toUpperCase();" />
+						<button type="button" onclick="document.getElementById('pref_[% ckey %]').value='';document.getElementById('picker_[% ckey %]').value='[% cr.def %]';">&times;</button>
+					</td>
+				</tr>
+			[% END %]
+		</table>
+	[% END %]
+[% END %]
+
+[% WRAPPER settingSection %]
 	[% WRAPPER settingGroup title="PLUGIN_HASCREENSAVER_PER_RADIO_SECTION" desc="PLUGIN_HASCREENSAVER_PER_RADIO_DESC" %]
 		[% IF players && players.size > 0 %]
 			<table>

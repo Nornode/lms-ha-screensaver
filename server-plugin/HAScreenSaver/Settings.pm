@@ -25,6 +25,16 @@ sub prefs {
             ha_token
             poll_interval
             font_name
+            background_style
+            weather_size
+            label_size
+            label_bold
+            value_size
+            clock_size
+            clock_color
+            value_color
+            label_color
+            unit_color
             weather_entity
             alert_entity
             alert_label
@@ -59,6 +69,36 @@ sub handler {
         if (defined $params->{pref_font_name}) {
             $params->{pref_font_name} =
                 Plugins::HAScreenSaver::Plugin::sanitizeFontName($params->{pref_font_name});
+        }
+        if (defined $params->{pref_background_style}) {
+            $params->{pref_background_style} =
+                Plugins::HAScreenSaver::Plugin::sanitizeBackgroundStyle($params->{pref_background_style});
+        }
+        if (defined $params->{pref_weather_size}) {
+            $params->{pref_weather_size} =
+                Plugins::HAScreenSaver::Plugin::sanitizeWeatherSize($params->{pref_weather_size});
+        }
+        if (defined $params->{pref_label_size}) {
+            $params->{pref_label_size} =
+                Plugins::HAScreenSaver::Plugin::sanitizeLabelSize($params->{pref_label_size});
+        }
+        if (defined $params->{pref_label_bold}) {
+            $params->{pref_label_bold} =
+                Plugins::HAScreenSaver::Plugin::sanitizeBoolFlag($params->{pref_label_bold});
+        }
+        if (defined $params->{pref_value_size}) {
+            $params->{pref_value_size} =
+                Plugins::HAScreenSaver::Plugin::sanitizeScaleSize($params->{pref_value_size});
+        }
+        if (defined $params->{pref_clock_size}) {
+            $params->{pref_clock_size} =
+                Plugins::HAScreenSaver::Plugin::sanitizeScaleSize($params->{pref_clock_size});
+        }
+        for my $ckey (qw(clock_color value_color label_color unit_color)) {
+            if (defined $params->{"pref_$ckey"}) {
+                $params->{"pref_$ckey"} =
+                    Plugins::HAScreenSaver::Plugin::sanitizeHexColor($params->{"pref_$ckey"});
+            }
         }
     }
 

@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """
 Generate anti-aliased RGBA PNG weather & status icons for HAScreenSaver
-using only Python standard library (4x supersampling for crisp 320x240 rendering).
+using only Python standard library (4x supersampling for crisp rendering).
+
+Covers all 15 official Home Assistant weather.* conditions in both standard
+(dark-background) and *_dark.png (light-background / Bright Silver) palettes,
+rendered natively at 56x56 for sharp 1:1 blitting on Squeezebox Radio & Controller.
 """
 
 import math
@@ -11,6 +15,9 @@ import zlib
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT_DIR = os.path.join(ROOT_DIR, "radio-applet", "HAScreenSaver")
+
+WEATHER_SIZE = 56
+SCALE = WEATHER_SIZE / 44.0  # Scale existing 44x44 vector coordinates cleanly to 56x56
 
 
 def write_png(path, width, height, rgba_bytes):
@@ -187,158 +194,256 @@ class Canvas:
         write_png(os.path.join(OUT_DIR, filename), self.w, self.h, self.to_rgba_bytes())
 
 
-SUN_GOLD = (255, 209, 92, 255)
-SUN_RAY = (255, 196, 61, 255)
-CLOUD_LIGHT = (224, 232, 242, 255)
-CLOUD_MID = (182, 194, 210, 255)
-CLOUD_DARK = (146, 160, 178, 255)
-RAIN_BLUE = (92, 184, 255, 255)
-POUR_BLUE = (62, 160, 255, 255)
-SNOW_ICE = (232, 246, 255, 255)
-FOG_GRAY = (176, 190, 208, 235)
-BOLT_YELLOW = (255, 214, 64, 255)
-MOON_LIGHT = (220, 232, 248, 255)
-WIND_BLUE = (180, 212, 236, 240)
-ALARM_MUTED = (142, 152, 168, 255)
+PALETTE_STANDARD = {
+    "sun_gold": (255, 209, 92, 255),
+    "sun_ray": (255, 196, 61, 255),
+    "cloud_light": (224, 232, 242, 255),
+    "cloud_mid": (182, 194, 210, 255),
+    "cloud_dark": (146, 160, 178, 255),
+    "rain_blue": (92, 184, 255, 255),
+    "pour_blue": (62, 160, 255, 255),
+    "snow_ice": (232, 246, 255, 255),
+    "hail_ice": (196, 228, 252, 255),
+    "fog_gray": (176, 190, 208, 235),
+    "bolt_yellow": (255, 214, 64, 255),
+    "moon_light": (220, 232, 248, 255),
+    "wind_blue": (180, 212, 236, 240),
+    "warn_bg": (235, 152, 46, 255),
+    "warn_fg": (22, 26, 32, 255),
+    "alarm": (142, 152, 168, 255),
+}
+
+# Dark-ink palette for light backgrounds (e.g. Bright Silver on white Squeezebox Radio)
+PALETTE_DARK = {
+    "sun_gold": (217, 134, 14, 255),
+    "sun_ray": (204, 120, 10, 255),
+    "cloud_light": (62, 74, 92, 255),
+    "cloud_mid": (92, 106, 126, 255),
+    "cloud_dark": (46, 56, 70, 255),
+    "rain_blue": (20, 110, 200, 255),
+    "pour_blue": (12, 88, 176, 255),
+    "snow_ice": (42, 126, 186, 255),
+    "hail_ice": (34, 96, 154, 255),
+    "fog_gray": (82, 94, 112, 235),
+    "bolt_yellow": (210, 138, 8, 255),
+    "moon_light": (54, 68, 92, 255),
+    "wind_blue": (48, 96, 136, 245),
+    "warn_bg": (194, 72, 24, 255),
+    "warn_fg": (255, 255, 255, 255),
+    "alarm": (60, 69, 82, 255),
+}
+
 WHITE = (255, 255, 255, 255)
 
 
+def S(v):
+    return v * SCALE
+
+
 def draw_cloud(c, ox, oy, scale, color):
-    # Clean fluffy cloud made of 3 overlapping circles + rounded base
-    c.circle(ox + 12 * scale, oy + 14 * scale, 7.2 * scale, color)
-    c.circle(ox + 20 * scale, oy + 10 * scale, 8.8 * scale, color)
-    c.circle(ox + 29 * scale, oy + 14 * scale, 6.8 * scale, color)
+    sc = scale * SCALE
+    ox *= SCALE
+    oy *= SCALE
+    c.circle(ox + 12 * sc, oy + 14 * sc, 7.2 * sc, color)
+    c.circle(ox + 20 * sc, oy + 10 * sc, 8.8 * sc, color)
+    c.circle(ox + 29 * sc, oy + 14 * sc, 6.8 * sc, color)
     c.capsule(
-        ox + 12 * scale,
-        oy + 17.5 * scale,
-        ox + 29 * scale,
-        oy + 17.5 * scale,
-        3.8 * scale,
+        ox + 12 * sc,
+        oy + 17.5 * sc,
+        ox + 29 * sc,
+        oy + 17.5 * sc,
+        3.8 * sc,
         color,
     )
 
 
-def gen_sunny():
-    c = Canvas(44, 44)
-    cx, cy = 22.0, 22.0
-    c.circle(cx, cy, 9.0, SUN_GOLD)
+def gen_sunny(pal, suffix):
+    c = Canvas(WEATHER_SIZE, WEATHER_SIZE)
+    cx, cy = S(22.0), S(22.0)
+    c.circle(cx, cy, S(9.0), pal["sun_gold"])
     for i in range(8):
         ang = i * (math.pi / 4.0)
-        x1 = cx + math.cos(ang) * 12.5
-        y1 = cy + math.sin(ang) * 12.5
-        x2 = cx + math.cos(ang) * 16.8
-        y2 = cy + math.sin(ang) * 16.8
-        c.capsule(x1, y1, x2, y2, 1.55, SUN_RAY)
-    c.save("weather_sunny.png")
+        x1 = cx + math.cos(ang) * S(12.5)
+        y1 = cy + math.sin(ang) * S(12.5)
+        x2 = cx + math.cos(ang) * S(16.8)
+        y2 = cy + math.sin(ang) * S(16.8)
+        c.capsule(x1, y1, x2, y2, S(1.55), pal["sun_ray"])
+    c.save(f"weather_sunny{suffix}.png")
 
 
-def gen_clear_night():
-    c = Canvas(44, 44)
-    c.circle(21.0, 22.0, 12.0, MOON_LIGHT)
-    c.subtract_circle(26.5, 18.0, 10.5)
-    # Two subtle stars
-    c.circle(33.5, 12.5, 1.4, SUN_GOLD)
-    c.circle(36.0, 20.5, 1.0, MOON_LIGHT)
-    c.save("weather_clear_night.png")
+def gen_clear_night(pal, suffix):
+    c = Canvas(WEATHER_SIZE, WEATHER_SIZE)
+    c.circle(S(21.0), S(22.0), S(12.0), pal["moon_light"])
+    c.subtract_circle(S(26.5), S(18.0), S(10.5))
+    c.circle(S(33.5), S(12.5), S(1.4), pal["sun_gold"])
+    c.circle(S(36.0), S(20.5), S(1.0), pal["moon_light"])
+    c.save(f"weather_clear_night{suffix}.png")
 
 
-def gen_partlycloudy():
-    c = Canvas(44, 44)
-    cx, cy = 15.5, 16.5
-    c.circle(cx, cy, 6.8, SUN_GOLD)
+def gen_partlycloudy(pal, suffix):
+    c = Canvas(WEATHER_SIZE, WEATHER_SIZE)
+    cx, cy = S(15.5), S(16.5)
+    c.circle(cx, cy, S(6.8), pal["sun_gold"])
     for i in range(8):
         ang = i * (math.pi / 4.0)
         c.capsule(
-            cx + math.cos(ang) * 9.5,
-            cy + math.sin(ang) * 9.5,
-            cx + math.cos(ang) * 12.2,
-            cy + math.sin(ang) * 12.2,
-            1.25,
-            SUN_RAY,
+            cx + math.cos(ang) * S(9.5),
+            cy + math.sin(ang) * S(9.5),
+            cx + math.cos(ang) * S(12.2),
+            cy + math.sin(ang) * S(12.2),
+            S(1.25),
+            pal["sun_ray"],
         )
-    draw_cloud(c, 8.0, 14.5, 0.92, CLOUD_LIGHT)
-    c.save("weather_partlycloudy.png")
+    draw_cloud(c, 8.0, 14.5, 0.92, pal["cloud_light"])
+    c.save(f"weather_partlycloudy{suffix}.png")
 
 
-def gen_cloudy():
-    c = Canvas(44, 44)
-    draw_cloud(c, 10.0, 8.5, 0.78, CLOUD_MID)
-    draw_cloud(c, 3.0, 13.5, 0.96, CLOUD_LIGHT)
-    c.save("weather_cloudy.png")
+def gen_cloudy(pal, suffix):
+    c = Canvas(WEATHER_SIZE, WEATHER_SIZE)
+    draw_cloud(c, 10.0, 8.5, 0.78, pal["cloud_mid"])
+    draw_cloud(c, 3.0, 13.5, 0.96, pal["cloud_light"])
+    c.save(f"weather_cloudy{suffix}.png")
 
 
-def gen_rainy():
-    c = Canvas(44, 44)
-    draw_cloud(c, 3.5, 5.5, 0.95, CLOUD_LIGHT)
+def gen_rainy(pal, suffix):
+    c = Canvas(WEATHER_SIZE, WEATHER_SIZE)
+    draw_cloud(c, 3.5, 5.5, 0.95, pal["cloud_light"])
     for x in (14.5, 22.5, 30.5):
-        c.capsule(x, 29.0, x - 2.4, 36.0, 1.45, RAIN_BLUE)
-    c.save("weather_rainy.png")
+        c.capsule(S(x), S(29.0), S(x - 2.4), S(36.0), S(1.45), pal["rain_blue"])
+    c.save(f"weather_rainy{suffix}.png")
 
 
-def gen_pouring():
-    c = Canvas(44, 44)
-    draw_cloud(c, 3.5, 4.5, 0.95, CLOUD_DARK)
+def gen_pouring(pal, suffix):
+    c = Canvas(WEATHER_SIZE, WEATHER_SIZE)
+    draw_cloud(c, 3.5, 4.5, 0.95, pal["cloud_dark"])
     for x in (11.5, 17.5, 23.5, 29.5, 35.0):
-        c.capsule(x, 27.5, x - 3.2, 37.5, 1.35, POUR_BLUE)
-    c.save("weather_pouring.png")
+        c.capsule(S(x), S(27.5), S(x - 3.2), S(37.5), S(1.35), pal["pour_blue"])
+    c.save(f"weather_pouring{suffix}.png")
 
 
-def gen_snowy():
-    c = Canvas(44, 44)
-    draw_cloud(c, 3.5, 5.5, 0.95, CLOUD_LIGHT)
+def gen_hail(pal, suffix):
+    c = Canvas(WEATHER_SIZE, WEATHER_SIZE)
+    draw_cloud(c, 3.5, 4.5, 0.95, pal["cloud_dark"])
+    for hx, hy in ((13.0, 30.0), (22.0, 29.5), (31.0, 30.0), (17.0, 36.5), (26.5, 36.5)):
+        diamond = [
+            (S(hx), S(hy - 2.5)),
+            (S(hx + 2.3), S(hy)),
+            (S(hx), S(hy + 2.5)),
+            (S(hx - 2.3), S(hy)),
+        ]
+        c.polygon(diamond, pal["hail_ice"])
+    c.save(f"weather_hail{suffix}.png")
+
+
+def gen_snowy(pal, suffix):
+    c = Canvas(WEATHER_SIZE, WEATHER_SIZE)
+    draw_cloud(c, 3.5, 5.5, 0.95, pal["cloud_light"])
     for fx, fy in ((14.0, 32.5), (22.5, 35.0), (31.0, 32.5)):
-        c.circle(fx, fy, 2.3, SNOW_ICE)
-    c.save("weather_snowy.png")
+        c.circle(S(fx), S(fy), S(2.3), pal["snow_ice"])
+    c.save(f"weather_snowy{suffix}.png")
 
 
-def gen_fog():
-    c = Canvas(44, 44)
-    draw_cloud(c, 4.5, 4.0, 0.88, CLOUD_MID)
-    c.capsule(8.0, 27.5, 36.0, 27.5, 1.7, FOG_GRAY)
-    c.capsule(11.0, 33.0, 33.0, 33.0, 1.7, FOG_GRAY)
-    c.capsule(14.0, 38.5, 30.0, 38.5, 1.6, FOG_GRAY)
-    c.save("weather_fog.png")
+def gen_snowy_rainy(pal, suffix):
+    c = Canvas(WEATHER_SIZE, WEATHER_SIZE)
+    draw_cloud(c, 3.5, 5.0, 0.95, pal["cloud_light"])
+    # Alternating rain streaks and snow dots
+    c.capsule(S(14.5), S(28.5), S(12.2), S(36.0), S(1.4), pal["rain_blue"])
+    c.circle(S(22.5), S(33.5), S(2.3), pal["snow_ice"])
+    c.capsule(S(31.0), S(28.5), S(28.7), S(36.0), S(1.4), pal["rain_blue"])
+    c.save(f"weather_snowy_rainy{suffix}.png")
 
 
-def gen_lightning():
-    c = Canvas(44, 44)
-    draw_cloud(c, 3.5, 4.5, 0.95, CLOUD_DARK)
+def gen_fog(pal, suffix):
+    c = Canvas(WEATHER_SIZE, WEATHER_SIZE)
+    draw_cloud(c, 4.5, 4.0, 0.88, pal["cloud_mid"])
+    c.capsule(S(8.0), S(27.5), S(36.0), S(27.5), S(1.7), pal["fog_gray"])
+    c.capsule(S(11.0), S(33.0), S(33.0), S(33.0), S(1.7), pal["fog_gray"])
+    c.capsule(S(14.0), S(38.5), S(30.0), S(38.5), S(1.6), pal["fog_gray"])
+    c.save(f"weather_fog{suffix}.png")
+
+
+def gen_lightning(pal, suffix):
+    c = Canvas(WEATHER_SIZE, WEATHER_SIZE)
+    draw_cloud(c, 3.5, 4.5, 0.95, pal["cloud_dark"])
     bolt = [
-        (24.0, 24.0),
-        (17.5, 33.0),
-        (22.5, 33.0),
-        (19.0, 41.0),
-        (28.0, 30.5),
-        (23.0, 30.5),
+        (S(24.0), S(24.0)),
+        (S(17.5), S(33.0)),
+        (S(22.5), S(33.0)),
+        (S(19.0), S(41.0)),
+        (S(28.0), S(30.5)),
+        (S(23.0), S(30.5)),
     ]
-    c.polygon(bolt, BOLT_YELLOW)
-    c.save("weather_lightning.png")
+    c.polygon(bolt, pal["bolt_yellow"])
+    c.save(f"weather_lightning{suffix}.png")
 
 
-def gen_windy():
-    c = Canvas(44, 44)
-    c.capsule(6.0, 15.0, 31.0, 15.0, 1.8, WIND_BLUE)
-    c.capsule(31.0, 15.0, 34.5, 11.5, 1.7, WIND_BLUE)
-    c.capsule(8.0, 22.5, 36.5, 22.5, 1.8, CLOUD_LIGHT)
-    c.capsule(12.0, 30.0, 29.0, 30.0, 1.8, WIND_BLUE)
-    c.capsule(29.0, 30.0, 32.5, 33.5, 1.7, WIND_BLUE)
-    c.save("weather_windy.png")
+def gen_lightning_rainy(pal, suffix):
+    c = Canvas(WEATHER_SIZE, WEATHER_SIZE)
+    draw_cloud(c, 3.5, 4.5, 0.95, pal["cloud_dark"])
+    c.capsule(S(13.0), S(28.5), S(10.8), S(36.5), S(1.35), pal["rain_blue"])
+    c.capsule(S(33.0), S(28.5), S(30.8), S(36.5), S(1.35), pal["rain_blue"])
+    bolt = [
+        (S(24.0), S(24.0)),
+        (S(18.0), S(32.5)),
+        (S(22.5), S(32.5)),
+        (S(19.5), S(40.5)),
+        (S(27.5), S(30.5)),
+        (S(23.0), S(30.5)),
+    ]
+    c.polygon(bolt, pal["bolt_yellow"])
+    c.save(f"weather_lightning_rainy{suffix}.png")
 
 
-def gen_alarm_icon():
+def gen_windy(pal, suffix):
+    c = Canvas(WEATHER_SIZE, WEATHER_SIZE)
+    c.capsule(S(6.0), S(15.0), S(31.0), S(15.0), S(1.8), pal["wind_blue"])
+    c.capsule(S(31.0), S(15.0), S(34.5), S(11.5), S(1.7), pal["wind_blue"])
+    c.capsule(S(8.0), S(22.5), S(36.5), S(22.5), S(1.8), pal["cloud_light"])
+    c.capsule(S(12.0), S(30.0), S(29.0), S(30.0), S(1.8), pal["wind_blue"])
+    c.capsule(S(29.0), S(30.0), S(32.5), S(33.5), S(1.7), pal["wind_blue"])
+    c.save(f"weather_windy{suffix}.png")
+
+
+def gen_windy_variant(pal, suffix):
+    c = Canvas(WEATHER_SIZE, WEATHER_SIZE)
+    draw_cloud(c, 5.5, 4.0, 0.85, pal["cloud_light"])
+    c.capsule(S(7.0), S(28.5), S(33.0), S(28.5), S(1.65), pal["wind_blue"])
+    c.capsule(S(33.0), S(28.5), S(36.0), S(25.5), S(1.55), pal["wind_blue"])
+    c.capsule(S(11.0), S(35.0), S(29.5), S(35.0), S(1.65), pal["wind_blue"])
+    c.capsule(S(29.5), S(35.0), S(32.5), S(38.0), S(1.55), pal["wind_blue"])
+    c.save(f"weather_windy_variant{suffix}.png")
+
+
+def gen_exceptional(pal, suffix):
+    c = Canvas(WEATHER_SIZE, WEATHER_SIZE)
+    # Rounded warning triangle + crisp exclamation mark
+    tri = [
+        (S(22.0), S(6.5)),
+        (S(38.0), S(36.5)),
+        (S(6.0), S(36.5)),
+    ]
+    c.polygon(tri, pal["warn_bg"])
+    c.capsule(S(22.0), S(6.5), S(38.0), S(36.5), S(2.0), pal["warn_bg"])
+    c.capsule(S(38.0), S(36.5), S(6.0), S(36.5), S(2.0), pal["warn_bg"])
+    c.capsule(S(6.0), S(36.5), S(22.0), S(6.5), S(2.0), pal["warn_bg"])
+    c.capsule(S(22.0), S(16.0), S(22.0), S(26.0), S(2.0), pal["warn_fg"])
+    c.circle(S(22.0), S(31.8), S(2.2), pal["warn_fg"])
+    c.save(f"weather_exceptional{suffix}.png")
+
+
+def gen_alarm_icon(pal, suffix):
     c = Canvas(16, 16)
-    # Classic bell silhouette in subtle muted slate matching temperature unit
-    c.circle(8.0, 3.0, 1.2, ALARM_MUTED)
-    c.circle(8.0, 7.2, 4.2, ALARM_MUTED)
-    c.rect(3.8, 7.2, 12.2, 11.5, ALARM_MUTED)
-    c.capsule(2.6, 11.8, 13.4, 11.8, 1.1, ALARM_MUTED)
-    c.circle(8.0, 13.6, 1.5, ALARM_MUTED)
-    c.save("icon_alarm.png")
+    col = pal["alarm"]
+    c.circle(8.0, 3.0, 1.2, col)
+    c.circle(8.0, 7.2, 4.2, col)
+    c.rect(3.8, 7.2, 12.2, 11.5, col)
+    c.capsule(2.6, 11.8, 13.4, 11.8, 1.1, col)
+    c.circle(8.0, 13.6, 1.5, col)
+    c.save(f"icon_alarm{suffix}.png")
 
 
 def gen_door_icon():
     c = Canvas(14, 14)
-    # Simple open-door frame + angled door leaf
     c.capsule(2.5, 2.0, 11.5, 2.0, 0.9, WHITE)
     c.capsule(2.5, 2.0, 2.5, 12.0, 0.9, WHITE)
     c.capsule(11.5, 2.0, 11.5, 12.0, 0.9, WHITE)
@@ -346,20 +451,36 @@ def gen_door_icon():
     c.save("icon_door.png")
 
 
+WEATHER_GENERATORS = (
+    gen_sunny,
+    gen_clear_night,
+    gen_partlycloudy,
+    gen_cloudy,
+    gen_rainy,
+    gen_pouring,
+    gen_hail,
+    gen_snowy,
+    gen_snowy_rainy,
+    gen_fog,
+    gen_lightning,
+    gen_lightning_rainy,
+    gen_windy,
+    gen_windy_variant,
+    gen_exceptional,
+)
+
+
 def main():
-    gen_sunny()
-    gen_clear_night()
-    gen_partlycloudy()
-    gen_cloudy()
-    gen_rainy()
-    gen_pouring()
-    gen_snowy()
-    gen_fog()
-    gen_lightning()
-    gen_windy()
-    gen_alarm_icon()
+    count = 0
+    for pal, suffix in ((PALETTE_STANDARD, ""), (PALETTE_DARK, "_dark")):
+        for fn in WEATHER_GENERATORS:
+            fn(pal, suffix)
+            count += 1
+        gen_alarm_icon(pal, suffix)
+        count += 1
     gen_door_icon()
-    print(f"Generated 12 PNG icons in {OUT_DIR}")
+    count += 1
+    print(f"Generated {count} PNG icons in {OUT_DIR} (weather icons: {WEATHER_SIZE}x{WEATHER_SIZE})")
 
 
 if __name__ == "__main__":

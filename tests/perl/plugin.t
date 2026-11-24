@@ -320,11 +320,15 @@ is(Plugins::HAScreenSaver::Plugin::sanitizeFontName('../evil.ttf'),  'FreeSansBo
     is($openText->{text},   'Open: Front Door, Patio', 'Text door sensor combines prefix and state');
 }
 
-# 4b. Test formatWeatherIcon
-is(Plugins::HAScreenSaver::Plugin::formatWeatherIcon({ state => 'partlycloudy' }), 'partlycloudy', 'Weather partlycloudy maps cleanly');
-is(Plugins::HAScreenSaver::Plugin::formatWeatherIcon({ state => 'clear-night' }),  'clear_night',  'Weather clear-night maps to clear_night');
-is(Plugins::HAScreenSaver::Plugin::formatWeatherIcon({ state => 'lightning-rainy' }), 'lightning', 'Weather lightning-rainy maps to lightning');
-is(Plugins::HAScreenSaver::Plugin::formatWeatherIcon({ state => 'unknown' }),      '',             'Unknown weather returns empty icon');
+# 4b. Test formatWeatherIcon (all 15 official HA conditions)
+is(Plugins::HAScreenSaver::Plugin::formatWeatherIcon({ state => 'partlycloudy' }),    'partlycloudy',    'Weather partlycloudy maps cleanly');
+is(Plugins::HAScreenSaver::Plugin::formatWeatherIcon({ state => 'clear-night' }),     'clear_night',     'Weather clear-night maps to clear_night');
+is(Plugins::HAScreenSaver::Plugin::formatWeatherIcon({ state => 'lightning-rainy' }), 'lightning_rainy', 'Weather lightning-rainy maps to lightning_rainy');
+is(Plugins::HAScreenSaver::Plugin::formatWeatherIcon({ state => 'hail' }),            'hail',            'Weather hail maps to hail');
+is(Plugins::HAScreenSaver::Plugin::formatWeatherIcon({ state => 'snowy-rainy' }),     'snowy_rainy',     'Weather snowy-rainy maps to snowy_rainy');
+is(Plugins::HAScreenSaver::Plugin::formatWeatherIcon({ state => 'windy-variant' }),   'windy_variant',   'Weather windy-variant maps to windy_variant');
+is(Plugins::HAScreenSaver::Plugin::formatWeatherIcon({ state => 'exceptional' }),     'exceptional',     'Weather exceptional maps to exceptional');
+is(Plugins::HAScreenSaver::Plugin::formatWeatherIcon({ state => 'unknown' }),         '',                'Unknown weather returns empty icon');
 
 # 5. Test buildRepoXml
 {
@@ -629,7 +633,7 @@ is(Plugins::HAScreenSaver::Plugin::formatWeatherIcon({ state => 'unknown' }),   
 
     my $pClient = MockClient->new(id => '22:22:22:22:22:01', name => 'Study Radio');
     my ($store, @keys) = Plugins::HAScreenSaver::PlayerSettings->prefs($pClient);
-    ok($store && scalar(@keys) == 20, 'prefs($client) returns client store and 20 player preference keys');
+    ok($store && scalar(@keys) == 30, 'prefs($client) returns client store and 30 player preference keys');
 
     my $params = {
         saveSettings             => 1,
@@ -907,6 +911,114 @@ is(Plugins::HAScreenSaver::Plugin::formatWeatherIcon({ state => 'unknown' }),   
     is($doneC, 1, 'Numeric-only request completed');
     my @postReqsC = grep { ($_->{method} || '') eq 'POST' } @Slim::Networking::SimpleAsyncHTTP::REQUESTS;
     is(scalar(@postReqsC), 0, 'Numeric-only setup fires 0 POST requests to /api/template');
+}
+
+# 11. v2.0.0 Appearance sanitizers, tri-state label_bold, per-player overrides, strings.txt & assets
+{
+    is(Plugins::HAScreenSaver::Plugin::sanitizeBackgroundStyle('SILVER'),  'silver',  'Valid background style normalized');
+    is(Plugins::HAScreenSaver::Plugin::sanitizeBackgroundStyle('velvet'),  'velvet',  'Velvet background style accepted');
+    is(Plugins::HAScreenSaver::Plugin::sanitizeBackgroundStyle('invalid'), 'slate',   'Invalid background style falls back to slate');
+    is(Plugins::HAScreenSaver::Plugin::sanitizeWeatherSize('compact'),     'compact', 'Compact weather size accepted');
+    is(Plugins::HAScreenSaver::Plugin::sanitizeWeatherSize('bogus'),       'large',   'Invalid weather size falls back to large');
+    is(Plugins::HAScreenSaver::Plugin::sanitizeLabelSize('medium'),        'medium',  'Medium label size accepted');
+    is(Plugins::HAScreenSaver::Plugin::sanitizeLabelSize('huge'),          'default', 'Invalid label size falls back to default');
+    is(Plugins::HAScreenSaver::Plugin::sanitizeScaleSize('compact'),       'compact', 'Compact scale size accepted');
+    is(Plugins::HAScreenSaver::Plugin::sanitizeScaleSize('nope'),          'default', 'Invalid scale size falls back to default');
+    is(Plugins::HAScreenSaver::Plugin::sanitizeBoolFlag('1'),              '1',       'Bool flag 1 -> 1');
+    is(Plugins::HAScreenSaver::Plugin::sanitizeBoolFlag('0'),              '0',       'Bool flag 0 -> 0');
+    is(Plugins::HAScreenSaver::Plugin::sanitizeHexColor('a1b2c3'),         '#A1B2C3', 'Hex without # normalized uppercase');
+    is(Plugins::HAScreenSaver::Plugin::sanitizeHexColor('#ff00aa'),        '#FF00AA', 'Hex with # normalized uppercase');
+    is(Plugins::HAScreenSaver::Plugin::sanitizeHexColor('not-a-hex'),      '',        'Invalid hex sanitized to empty');
+    is(Plugins::HAScreenSaver::Plugin::sanitizeHexColor(''),               '',        'Blank hex remains empty');
+
+    # Tri-state player_label_bold & corrupt-pref sanitization on emit
+    my $prefs = Slim::Utils::Prefs::preferences('plugin.hascreensaver');
+    $prefs->set('background_style', 'corrupt_bg');
+    $prefs->set('weather_size',     'large');
+    $prefs->set('label_size',       'default');
+    $prefs->set('label_bold',       '1');
+    $prefs->set('clock_color',      'badcolor');
+    $prefs->set('label_color',      '#b8c4d4');
+
+    my $cInherit = MockClient->new(id => 'aa:bb:cc:dd:ee:01', name => 'Inherit Radio');
+    my $cfgInh = Plugins::HAScreenSaver::Plugin::resolveEffectiveConfig($prefs, $cInherit);
+    is($cfgInh->{background_style}, 'slate',   'Corrupt global background_style sanitized on emit');
+    is($cfgInh->{clock_color},      '',        'Corrupt global clock_color sanitized on emit');
+    is($cfgInh->{label_color},      '#B8C4D4', 'Valid global label_color normalized on emit');
+    is($cfgInh->{label_bold},       '1',       'Player inherits global label_bold=1 when blank');
+
+    my $cOverride = MockClient->new(id => 'aa:bb:cc:dd:ee:02', name => 'White Radio');
+    my $cp = $prefs->client($cOverride);
+    $cp->set('player_background_style', 'silver');
+    $cp->set('player_weather_size',     'compact');
+    $cp->set('player_label_bold',       '0');
+    $cp->set('player_label_size',       'large');
+    $cp->set('player_clock_color',      '#112233');
+
+    my $cfgOv = Plugins::HAScreenSaver::Plugin::resolveEffectiveConfig($prefs, $cOverride);
+    is($cfgOv->{has_overrides},    1,         'Appearance overrides set has_overrides=1');
+    is($cfgOv->{background_style}, 'silver',  'Player overrides background_style to silver');
+    is($cfgOv->{weather_size},     'compact', 'Player overrides weather_size to compact');
+    is($cfgOv->{label_bold},       '0',       'Tri-state player_label_bold="0" explicitly overrides global "1"');
+    is($cfgOv->{label_size},       'large',   'Player overrides label_size to large');
+    is($cfgOv->{clock_color},      '#112233', 'Player overrides clock_color');
+
+    my $summary = Plugins::HAScreenSaver::Plugin::describeClientOverrides($prefs, $cOverride);
+    like($summary, qr/Background \(silver\)/,       'Override summary mentions Background (silver)');
+    like($summary, qr/Weather size \(compact\)/,    'Override summary mentions Weather size (compact)');
+    like($summary, qr/Label \(large, regular\)/,    'Override summary shows explicit regular override');
+    like($summary, qr/Colors \(custom\)/,           'Override summary mentions Colors (custom)');
+
+    # Validate strings.txt formatting (real TABs + all 6 languages DE, EN, ES, FI, FR, SV)
+    for my $sfile (
+        'server-plugin/HAScreenSaver/strings.txt',
+        'radio-applet/HAScreenSaver/strings.txt',
+    ) {
+        open my $fh, '<:raw', $sfile or die "Cannot open $sfile: $!";
+        my $raw = do { local $/; <$fh> };
+        close $fh;
+
+        my $curToken;
+        my %langsByToken;
+        my $badLines = 0;
+        for my $line (split /\r?\n/, $raw) {
+            next if $line eq '';
+            if ($line =~ /^[A-Z0-9_]+$/) {
+                $curToken = $line;
+                $langsByToken{$curToken} = {};
+            } elsif ($line =~ /^\t(DE|EN|ES|FI|FR|SV)\t.+/) {
+                $langsByToken{$curToken}{$1} = 1 if defined $curToken;
+            } else {
+                $badLines++;
+            }
+        }
+        is($badLines, 0, "$sfile has zero malformed lines (strict TAB format)");
+        my @missing;
+        for my $tok (sort keys %langsByToken) {
+            for my $lg (qw(DE EN ES FI FR SV)) {
+                push @missing, "$tok:$lg" unless $langsByToken{$tok}{$lg};
+            }
+        }
+        is(scalar(@missing), 0, "$sfile has all 6 languages (DE/EN/ES/FI/FR/SV) for every token");
+    }
+
+    # Validate all 15 weather icons (standard + _dark) + alarm icons + door icon exist
+    my @weatherKeys = qw(
+        sunny clear_night partlycloudy cloudy rainy pouring hail
+        snowy snowy_rainy fog lightning lightning_rainy windy windy_variant exceptional
+    );
+    my @missingIcons;
+    for my $wk (@weatherKeys) {
+        for my $sfx ('', '_dark') {
+            my $p = "radio-applet/HAScreenSaver/weather_${wk}${sfx}.png";
+            push @missingIcons, $p unless -f $p;
+        }
+    }
+    for my $extra (qw(icon_alarm.png icon_alarm_dark.png icon_door.png)) {
+        my $p = "radio-applet/HAScreenSaver/$extra";
+        push @missingIcons, $p unless -f $p;
+    }
+    is(scalar(@missingIcons), 0, 'All 33 weather/alarm/door PNG icons exist in radio-applet/HAScreenSaver/');
 }
 
 done_testing();

@@ -214,6 +214,101 @@ Model.applyServerPayload(stText, {
 assertEq(Model.formatSensorDisplay(stText.sensors[1]), "Öppen", "Localized binary_sensor value preserved without unit")
 assertEq(Model.formatSensorDisplay(stText.sensors[2]), "Olåst", "Localized lock value preserved without unit")
 
+-- 8. v2.0.0 Appearance: hex parsing, 15 weather icons (light & dark), color presets, payload reset, layout matrix
+assertEq(Model.parseHexColor("#FFFFFF", 0), 0xFFFFFFFF, "parseHexColor parses #FFFFFF")
+assertEq(Model.parseHexColor("112233", 0), Model.rgba(17, 34, 51, 255), "parseHexColor parses hex without #")
+assertEq(Model.parseHexColor("#aAbBcC", 0), Model.rgba(170, 187, 204, 255), "parseHexColor handles mixed case")
+assertEq(Model.parseHexColor("bad", 0x123456FF), 0x123456FF, "parseHexColor falls back on invalid input")
+assertEq(Model.parseHexColor("", 0x123456FF), 0x123456FF, "parseHexColor falls back on empty string")
+
+local allWeather = {
+    "sunny", "clear_night", "partlycloudy", "cloudy", "rainy", "pouring", "hail",
+    "snowy", "snowy_rainy", "fog", "lightning", "lightning_rainy", "windy", "windy_variant", "exceptional"
+}
+for _, wk in ipairs(allWeather) do
+    assertEq(Model.resolveWeatherIconPath(wk, false), "applets/HAScreenSaver/weather_" .. wk .. ".png", "Standard icon path for " .. wk)
+    assertEq(Model.resolveWeatherIconPath(wk, true),  "applets/HAScreenSaver/weather_" .. wk .. "_dark.png", "Dark icon path for " .. wk)
+end
+
+local stApp = Model.newState()
+Model.applyServerPayload(stApp, {
+    poll_interval    = 60,
+    background_style = "silver",
+    weather_size     = "compact",
+    label_size       = "large",
+    label_bold       = 1,
+    value_size       = "compact",
+    clock_size       = "large",
+    clock_color      = "#112233",
+    label_color      = "#445566",
+    sensors_loop     = {},
+}, 30000)
+assertEq(stApp.backgroundStyle, "silver",  "Payload sets backgroundStyle")
+assertEq(stApp.weatherSize,     "compact", "Payload sets weatherSize")
+assertEq(stApp.labelSize,       "large",   "Payload sets labelSize")
+assertEq(stApp.labelBold,       true,      "Payload sets labelBold")
+assertEq(stApp.valueSize,       "compact", "Payload sets valueSize")
+assertEq(stApp.clockSize,       "large",   "Payload sets clockSize")
+
+local colsSilver = Model.resolveColors(stApp)
+assertEq(colsSilver.isLight, true, "Silver preset sets isLight=true")
+assertEq(colsSilver.clock, Model.rgba(17, 34, 51, 255), "Custom clock_color overrides silver default")
+assertEq(colsSilver.value, 0x161B22FF, "Unset value_color uses silver dark charcoal default")
+assertEq(colsSilver.stale, 0x7A8390FF, "Silver preset provides muted stale color")
+
+-- Wire backwards-compatibility: omitting v2.0.0 fields resets appearance cleanly to v1.5.1 defaults
+Model.applyServerPayload(stApp, { poll_interval = 60, sensors_loop = {} }, 31000)
+assertEq(stApp.backgroundStyle, "slate",   "Missing background_style resets to slate")
+assertEq(stApp.weatherSize,     "large",   "Missing weather_size resets to large")
+assertEq(stApp.labelSize,       "default", "Missing label_size resets to default")
+assertEq(stApp.labelBold,       false,     "Missing label_bold resets to false")
+assertEq(stApp.clockColor,      "",        "Missing clock_color resets to empty")
+
+local colsSlate = Model.resolveColors(stApp)
+assertEq(colsSlate.isLight, false,      "Slate preset is dark")
+assertEq(colsSlate.clock,   0xFFFFFFFF, "Slate clock matches v1.5.1 constant")
+assertEq(colsSlate.label,   0x7E8898FF, "Slate label matches v1.5.1 constant")
+assertEq(colsSlate.value,   0xF5F7FAFF, "Slate value matches v1.5.1 constant")
+assertEq(colsSlate.unit,    0x8E98A8FF, "Slate unit matches v1.5.1 constant")
+assertEq(colsSlate.stale,   0x606875FF, "Slate stale matches v1.5.1 constant")
+
+-- Default-equivalence & exhaustive layout safety matrix across Radio (320x240), Controller (240x320), Touch (480x272)
+local testScreens = { { 320, 240 }, { 240, 320 }, { 480, 272 } }
+for _, sc in ipairs(testScreens) do
+    local sw, sh = sc[1], sc[2]
+    local defNil = Model.computeLayout(sw, sh, 4, true, true, nil)
+    local defExp = Model.computeLayout(sw, sh, 4, true, true, { labelSize = "default", valueSize = "default", clockSize = "default", weatherSize = "large" })
+    local defBad = Model.computeLayout(sw, sh, 4, true, true, { labelSize = "bogus", valueSize = "bogus", clockSize = "bogus", weatherSize = "bogus" })
+    assertEq(defExp.clockFontSize, defNil.clockFontSize, sw .. "x" .. sh .. " default clockFontSize matches nil")
+    assertEq(defExp.labelFontSize, defNil.labelFontSize, sw .. "x" .. sh .. " default labelFontSize matches nil")
+    assertEq(defExp.valueFontSize, defNil.valueFontSize, sw .. "x" .. sh .. " default valueFontSize matches nil")
+    assertEq(defBad.clockFontSize, defNil.clockFontSize, sw .. "x" .. sh .. " garbage styleOpts matches nil")
+
+    for _, lSz in ipairs({ "default", "medium", "large" }) do
+        for _, vSz in ipairs({ "compact", "default", "large" }) do
+            for _, cSz in ipairs({ "compact", "default", "large" }) do
+                for n = 0, 4 do
+                    local lay = Model.computeLayout(sw, sh, n, true, true, {
+                        weatherSize = "large",
+                        labelSize   = lSz,
+                        valueSize   = vSz,
+                        clockSize   = cSz,
+                    })
+                    assertEq(lay.clockFontSize >= 12, true, "clockFontSize >= 12")
+                    if lay.hasBottom and lay.bottomBandY then
+                        assertEq(lay.bottomBandY < sh, true, "bottomBandY < screenH")
+                        if n > 0 then
+                            assertEq(lay.labelFontSize >= 8,  true, "labelFontSize >= 8")
+                            assertEq(lay.valueFontSize >= 12, true, "valueFontSize >= 12")
+                            assertEq(lay.unitFontSize >= 9,   true, "unitFontSize >= 9")
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
 print(string.format("Lua unit tests: %d passed, %d failed", passed, failed))
 if failed > 0 then
     os.exit(1)

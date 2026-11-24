@@ -1,229 +1,615 @@
 PLUGIN_HASCREENSAVER
 	DE	Home Assistant Bildschirmschoner
 	EN	Home Assistant Screensaver
+	ES	Salvapantallas de Home Assistant
+	FI	Home Assistant -näytönsäästäjä
 	FR	Économiseur d’écran Home Assistant
+	SV	Home Assistant-skärmsläckare
 
 PLUGIN_HASCREENSAVER_DESC
 	DE	Zustandsloser Live-Proxy für Home Assistant Sensorwerte und Radioweckerstatus zum HA-Screensaver-Applet auf Squeezebox-Radios, ohne langfristiges Zwischenspeichern.
 	EN	Stateless live proxy serving Home Assistant sensor states and radio alarm status to the HA Screensaver Squeezebox Radio applet, with zero long-term caching.
+	ES	Proxy en directo sin estado que sirve los estados de los sensores de Home Assistant y el estado de la alarma de radio al applet HA Screensaver en Squeezebox Radio, sin caché a largo plazo.
+	FI	Tilaton reaaliaikainen välityspalvelin, joka tarjoaa Home Assistant -anturitiedot ja radioherätyksen tilan Squeezebox Radion HA Screensaver -sovelmaan ilman pitkäaikaista välimuistia.
 	FR	Proxy dynamique sans état fournissant les états des capteurs Home Assistant et l’état des alarmes radio à l’applet HA Screensaver des Squeezebox Radios, sans mise en cache à long terme.
+	SV	Tillståndslös direktproxy som levererar Home Assistant-sensorvärden och radioalarmstatus till HA Screensaver-appleten på Squeezebox Radio, helt utan långtidscachning.
 
 PLUGIN_HASCREENSAVER_CONNECTION
 	DE	Home Assistant-Verbindung
 	EN	Home Assistant Connection
+	ES	Conexión con Home Assistant
+	FI	Home Assistant -yhteys
 	FR	Connexion à Home Assistant
+	SV	Home Assistant-anslutning
 
 PLUGIN_HASCREENSAVER_HA_URL
 	DE	Home Assistant URL (optional)
 	EN	Home Assistant URL (optional)
+	ES	URL de Home Assistant (opcional)
+	FI	Home Assistant -osoite (valinnainen)
 	FR	URL de Home Assistant (facultatif)
+	SV	Home Assistant-URL (valfri)
 
 PLUGIN_HASCREENSAVER_HA_URL_DESC
 	DE	Für die automatische Verbindung über die Home Assistant Supervisor-API leer lassen, wenn LMS als HA-Add-on ausgeführt wird. Andernfalls beispielsweise http://homeassistant.local:8123 eingeben
 	EN	Leave blank to auto-connect via the Home Assistant Supervisor API when LMS runs as an HA Add-on. Otherwise enter e.g. http://homeassistant.local:8123
+	ES	Déjelo vacío para conectar automáticamente mediante la API Supervisor de Home Assistant cuando LMS se ejecute como complemento de HA. De lo contrario, introduzca p. ej. http://homeassistant.local:8123
+	FI	Jätä tyhjäksi yhdistääksesi automaattisesti Home Assistant Supervisor -rajapinnan kautta, kun LMS toimii HA-lisäosana. Muussa tapauksessa syötä esim. http://homeassistant.local:8123
 	FR	Laissez ce champ vide pour une connexion automatique via l’API Supervisor de Home Assistant lorsque LMS fonctionne comme add-on HA. Sinon, saisissez par exemple http://homeassistant.local:8123
+	SV	Lämna tomt för att ansluta automatiskt via Home Assistant Supervisor-API när LMS körs som ett HA-tillägg. Ange annars t.ex. http://homeassistant.local:8123
 
 PLUGIN_HASCREENSAVER_HA_TOKEN
 	DE	Langlebiger Zugriffstoken (optional)
 	EN	Long-Lived Access Token (optional)
+	ES	Token de acceso de larga duración (opcional)
+	FI	Pitkäaikainen käyttöoikeustunnus (valinnainen)
 	FR	Jeton d’accès longue durée (facultatif)
+	SV	Långlivad åtkomsttoken (valfri)
 
 PLUGIN_HASCREENSAVER_HA_TOKEN_DESC
 	DE	Bei Verwendung der Home Assistant Supervisor-API leer lassen. Nur erforderlich, wenn oben eine eigene Home Assistant URL festgelegt wurde.
 	EN	Leave blank when using the Home Assistant Supervisor API. Required only when a custom Home Assistant URL is set above.
+	ES	Déjelo vacío cuando utilice la API Supervisor de Home Assistant. Solo es obligatorio si arriba se ha configurado una URL personalizada.
+	FI	Jätä tyhjäksi käyttäessäsi Home Assistant Supervisor -rajapintaa. Vaaditaan vain, jos yllä on määritetty mukautettu Home Assistant -osoite.
 	FR	Laissez ce champ vide lorsque vous utilisez l’API Supervisor de Home Assistant. Requis uniquement lorsqu’une URL Home Assistant personnalisée est définie ci-dessus.
+	SV	Lämna tomt vid användning av Home Assistant Supervisor-API. Krävs endast om en egen Home Assistant-URL har angetts ovan.
 
 PLUGIN_HASCREENSAVER_DISPLAY
 	DE	Anzeige &amp; Aktualisierung
 	EN	Display &amp; Polling
+	ES	Pantalla y actualización
+	FI	Näyttö ja päivitys
 	FR	Affichage et actualisation
+	SV	Visning och uppdatering
 
 PLUGIN_HASCREENSAVER_POLL_INTERVAL
 	DE	Aktualisierungsintervall (Sekunden)
 	EN	Update Interval (seconds)
+	ES	Intervalo de actualización (segundos)
+	FI	Päivitysväli (sekuntia)
 	FR	Intervalle d’actualisation (secondes)
+	SV	Uppdateringsintervall (sekunder)
 
 PLUGIN_HASCREENSAVER_POLL_INTERVAL_DESC
 	DE	Häufigkeit, mit der aktive Bildschirmschoner neue Sensorwerte abrufen (10–300 Sekunden, Standard 60). Sensorwerte werden weder auf LMS noch auf dem Radio langfristig zwischengespeichert.
 	EN	How often active screensavers request fresh sensor states (10-300 seconds, default 60). No sensor values are cached long term on LMS or the radio.
+	ES	Frecuencia con la que los salvapantallas activos solicitan estados actualizados de los sensores (10-300 segundos, 60 por defecto). Ningún valor se guarda en caché a largo plazo.
+	FI	Kuinka usein aktiivinen näytönsäästäjä hakee uudet anturitiedot (10–300 sekuntia, oletus 60). Anturiarvoja ei tallenneta pitkäaikaiseen välimuistiin LMS:ssä tai radiossa.
 	FR	Fréquence à laquelle les économiseurs d’écran actifs demandent les états actuels des capteurs (10 à 300 secondes, 60 par défaut). Aucune valeur de capteur n’est mise en cache à long terme sur LMS ou sur la radio.
+	SV	Hur ofta aktiva skärmsläckare hämtar färska sensorvärden (10–300 sekunder, standard 60). Inga sensorvärden cachas långsiktigt på LMS eller radion.
 
 PLUGIN_HASCREENSAVER_FONT_NAME
 	DE	Uhrschrift
 	EN	Clock Font
+	ES	Fuente del reloj
+	FI	Kellon fontti
 	FR	Police de l’heure
+	SV	Klocktypsnitt
 
 PLUGIN_HASCREENSAVER_FONT_NAME_DESC
 	DE	Standardschrift für die Digitaluhr auf dem Squeezebox Radio (pro Radio überschreibbar).
 	EN	Default font used for the digital clock on Squeezebox Radio (can be overridden per radio).
+	ES	Fuente predeterminada para el reloj digital en Squeezebox Radio (se puede sobrescribir por radio).
+	FI	Digitaalikellon oletusfontti Squeezebox Radiossa (voidaan ohittaa radiokohtaisesti).
 	FR	Police par défaut utilisée pour l’heure numérique sur la Squeezebox Radio (peut être remplacée pour chaque radio).
+	SV	Standardtypsnitt för digitalklockan på Squeezebox Radio (kan åsidosättas per radio).
 
 PLUGIN_HASCREENSAVER_ALERT_SECTION
 	DE	Alarm-/Türkontaktsensor — Globaler Standard (optional)
 	EN	Alert / Door Contact Sensor — Global Default (optional)
+	ES	Sensor de alerta / contacto de puerta — Valor global (opcional)
+	FI	Hälytys-/ovikosketinanturi — Yleinen oletus (valinnainen)
 	FR	Capteur d’alerte / contact de porte — Valeur globale par défaut (facultatif)
+	SV	Larm-/dörrkontaktsensor — Global standard (valfri)
 
 PLUGIN_HASCREENSAVER_ALERT_ENTITY
 	DE	Alarm-Entitäts-ID
 	EN	Alert Entity ID
+	ES	ID de entidad de alerta
+	FI	Hälytysentiteetin tunnus
 	FR	ID de l’entité d’alerte
+	SV	Entitets-ID för larm
 
 PLUGIN_HASCREENSAVER_ALERT_ENTITY_DESC
 	DE	Optionaler globaler Standard für einen binary_sensor oder text_sensor (z. B. binary_sensor.front_door oder ein Vorlagensensor, der offene Türen auflistet). Wird bei „off“, „closed“, „none“, „ok“ oder einem leeren Wert automatisch ausgeblendet. Dieses Feld leer lassen, um Türalarme nur für bestimmte Radios über die Playereinstellungen zu aktivieren.
 	EN	Optional global default binary_sensor or text sensor (e.g. binary_sensor.front_door or a template sensor listing open doors). Hidden automatically when state is off, closed, none, ok, or empty. Leave blank here to enable door alerts only on specific radios via Player Settings.
+	ES	binary_sensor o sensor de texto global opcional (p. ej. binary_sensor.front_door o un sensor de plantilla con puertas abiertas). Se oculta automáticamente si el estado es off, closed, none, ok o vacío. Déjelo vacío aquí para activar alertas solo en radios concretas desde Ajustes del reproductor.
+	FI	Valinnainen yleinen binary_sensor- tai tekstianturi (esim. binary_sensor.front_door tai avoimet ovet listaava mallianturi). Piilotetaan automaattisesti, kun tila on off, closed, none, ok tai tyhjä. Jätä tyhjäksi ottaaksesi ovihälytykset käyttöön vain tietyissä radioissa soitinasetuksista.
 	FR	binary_sensor ou text_sensor global facultatif par défaut (par exemple binary_sensor.front_door ou un capteur modèle listant les portes ouvertes). Masqué automatiquement lorsque l’état est off, closed, none, ok ou vide. Laissez ce champ vide pour activer les alertes de porte uniquement sur certaines radios via les paramètres du lecteur.
+	SV	Valfri global binary_sensor eller textsensor (t.ex. binary_sensor.front_door eller en mallsensor som listar öppna dörrar). Döljs automatiskt när status är off, closed, none, ok eller tom. Lämna tomt här för att endast aktivera dörrlarm på specifika radioapparater via spelarinställningarna.
 
 PLUGIN_HASCREENSAVER_ALERT_LABEL
 	DE	Alarm-Präfixtext
 	EN	Alert Prefix Label
+	ES	Etiqueta de prefijo de alerta
+	FI	Hälytyksen etuliite
 	FR	Préfixe d’alerte
+	SV	Larmprefix
 
 PLUGIN_HASCREENSAVER_WEATHER_SECTION
 	DE	Wettersymbol — Globaler Standard (optional)
 	EN	Weather Symbol — Global Default (optional)
+	ES	Símbolo meteorológico — Valor global (opcional)
+	FI	Sääsymboli — Yleinen oletus (valinnainen)
 	FR	Symbole météo — Valeur globale par défaut (facultatif)
+	SV	Vädersymbol — Global standard (valfri)
 
 PLUGIN_HASCREENSAVER_WEATHER_ENTITY
 	DE	Wetter-Entitäts-ID
 	EN	Weather Entity ID
+	ES	ID de entidad meteorológica
+	FI	Sääentiteetin tunnus
 	FR	ID de l’entité météo
+	SV	Entitets-ID för väder
 
 PLUGIN_HASCREENSAVER_WEATHER_ENTITY_DESC
 	DE	Optionaler globaler Standard für eine Home Assistant Wetterentität (z. B. weather.home), um ein Wettersymbol mittig am unteren Rand des Bildschirmschoners anzuzeigen.
 	EN	Optional global default Home Assistant weather entity (e.g. weather.home) to display a weather icon in the bottom center of the screensaver.
+	ES	Entidad meteorológica global opcional de Home Assistant (p. ej. weather.home) para mostrar un icono del tiempo en el salvapantallas.
+	FI	Valinnainen yleinen Home Assistant -sääentiteetti (esim. weather.home) sääkuvakkeen näyttämiseen näytönsäästäjässä.
 	FR	Entité météo Home Assistant globale facultative par défaut (par exemple weather.home) pour afficher une icône météo au bas et au centre de l’économiseur d’écran.
+	SV	Valfri global väderentitet i Home Assistant (t.ex. weather.home) för att visa en väderikon på skärmsläckaren.
 
 PLUGIN_HASCREENSAVER_SENSORS_SECTION
 	DE	Home Assistant Sensoren — Globale Standards (bis zu 4)
 	EN	Home Assistant Sensors — Global Defaults (up to 4)
+	ES	Sensores de Home Assistant — Valores globales (hasta 4)
+	FI	Home Assistant -anturit — Yleiset oletukset (enintään 4)
 	FR	Capteurs Home Assistant — Valeurs globales par défaut (jusqu’à 4)
+	SV	Home Assistant-sensorer — Globala standardvärden (upp till 4)
 
 PLUGIN_HASCREENSAVER_SENSORS_DESC
 	DE	Konfigurieren Sie 1 bis 4 Standardsensoren für Radios ohne eigene Überschreibungen (unterstützt numerische Sensoren sowie binary_sensor, lock, cover usw., wie in Home Assistant lokalisiert dargestellt, z. B. Offen/Geschlossen oder Verriegelt/Entriegelt). Nicht verwendete Felder leer lassen; Dezimalstellen und Einheit werden bei nichtnumerischen Zuständen ignoriert, sofern keine eigene Einheit festgelegt ist. Das Radio passt das Layout automatisch an (1–2 Sensoren: einzelne Reihe; 3–4 Sensoren: 2×2-Raster).
 	EN	Configure 1 to 4 default sensors used by any radio without custom overrides (supports numeric sensors as well as binary_sensor, lock, cover, etc., shown localized like in Home Assistant, e.g. Open/Closed or Locked/Unlocked). Leave unused slots blank; decimals and unit are ignored for non-numeric states unless a custom unit override is set. The radio adapts its layout automatically (1-2 sensors: single row; 3-4 sensors: 2x2 grid).
+	ES	Configure de 1 a 4 sensores predeterminados para cualquier radio sin ajustes personalizados (admite sensores numéricos así como binary_sensor, lock, cover, etc., traducidos como en Home Assistant). Deje vacías las ranuras sin usar; los decimales y la unidad se ignoran en estados no numéricos salvo unidad personalizada. La radio adapta el diseño automáticamente.
+	FI	Määritä 1–4 oletusanturia radioille ilman omia ohituksia (tukee numeerisia antureita sekä binary_sensor-, lock-, cover- ym. entiteettejä Home Assistantin kielellä lokalisoituna). Jätä käyttämättömät paikat tyhjiksi; desimaalit ja yksikkö ohitetaan ei-numeerisilla arvoilla, ellei yksikköä ole määritetty. Radio mukauttaa asettelun automaattisesti.
 	FR	Configurez de 1 à 4 capteurs par défaut utilisés par toute radio sans remplacement personnalisé (capteurs numériques ainsi que binary_sensor, lock, cover, etc., affichés de façon localisée comme dans Home Assistant, par exemple Ouvert/Fermé ou Verrouillé/Déverrouillé). Laissez les emplacements inutilisés vides ; les décimales et l’unité sont ignorées pour les états non numériques, sauf si une unité personnalisée est définie. La radio adapte automatiquement sa disposition (1 à 2 capteurs : une seule ligne ; 3 à 4 capteurs : grille 2×2).
+	SV	Konfigurera 1 till 4 standardsensorer för radioapparater utan egna åsidosättningar (stöder numeriska sensorer samt binary_sensor, lock, cover m.fl., lokaliserade som i Home Assistant). Lämna oanvända platser tomma; decimaler och enhet ignoreras för icke-numeriska värden om ingen egen enhet anges. Radion anpassar layouten automatiskt.
 
 PLUGIN_HASCREENSAVER_ENTITY_ID
 	DE	Entitäts-ID
 	EN	Entity ID
+	ES	ID de entidad
+	FI	Entiteetin tunnus
 	FR	ID d’entité
+	SV	Entitets-ID
 
 PLUGIN_HASCREENSAVER_LABEL
 	DE	Kurzbezeichnung
 	EN	Short Label
+	ES	Etiqueta corta
+	FI	Lyhyt nimi
 	FR	Libellé court
+	SV	Kort etikett
 
 PLUGIN_HASCREENSAVER_DECIMALS
 	DE	Dezimalstellen
 	EN	Decimals
+	ES	Decimales
+	FI	Desimaalit
 	FR	Décimales
+	SV	Decimaler
 
 PLUGIN_HASCREENSAVER_UNIT
 	DE	Einheit überschreiben
 	EN	Unit Override
+	ES	Unidad personalizada
+	FI	Yksikön ohitus
 	FR	Remplacement d’unité
+	SV	Anpassad enhet
+
+PLUGIN_HASCREENSAVER_APPEARANCE_SECTION
+	DE	Darstellung — Globale Standards (optional)
+	EN	Appearance — Global Defaults (optional)
+	ES	Apariencia — Valores globales (opcional)
+	FI	Ulkoasu — Yleiset oletukset (valinnainen)
+	FR	Apparence — Valeurs globales par défaut (facultatif)
+	SV	Utseende — Globala standardvärden (valfritt)
+
+PLUGIN_HASCREENSAVER_APPEARANCE_DESC
+	DE	Optional Hintergrundstil, Größen, Schriftstärke und Farben global anpassen (pro Radio überschreibbar). Farbfelder für Standardfarben leer lassen.
+	EN	Optionally customize background style, sizes, label weight, and hex colors globally (can be overridden per radio). Leave color fields blank to use preset defaults.
+	ES	Personalice opcionalmente el fondo, los tamaños, el grosor de las etiquetas y los colores hexadecimales globalmente (sobrescribible por radio). Deje los colores vacíos para usar los valores predeterminados.
+	FI	Mukauta valinnaisesti taustatyyliä, kokoja, otsikon lihavointia ja heksavärejä yleisesti (voidaan ohittaa radiokohtaisesti). Jätä värikentät tyhjiksi käyttääksesi teeman oletuksia.
+	FR	Personnalisez éventuellement le fond, les tailles, la graisse des libellés et les couleurs hexadécimales globalement (remplaçable par radio). Laissez les couleurs vides pour utiliser les valeurs par défaut.
+	SV	Anpassa valfritt bakgrundsstil, storlekar, fetstil för etiketter och hex-färger globalt (kan åsidosättas per radio). Lämna färgfälten tomma för temats standardfärger.
+
+PLUGIN_HASCREENSAVER_PLAYER_APPEARANCE_DESC
+	DE	Optional Darstellung für dieses Radio überschreiben. Auf „Globalen Standard verwenden“ belassen oder Farbfelder leer lassen, um globale Standards zu übernehmen.
+	EN	Optionally override appearance for this radio. Leave on Use Global Default or leave color fields blank to inherit Global Defaults.
+	ES	Sobrescriba opcionalmente la apariencia para esta radio. Deje «Usar valor global» o los campos de color vacíos para heredar los valores globales.
+	FI	Ohita valinnaisesti tämän radion ulkoasu. Jätä asetukseksi Käytä yleistä oletusta tai jätä värikentät tyhjiksi periäksesi yleiset oletukset.
+	FR	Remplacez éventuellement l’apparence pour cette radio. Laissez sur Utiliser la valeur globale par défaut ou laissez les champs de couleur vides pour hériter des réglages globaux.
+	SV	Åsidosätt valfritt utseendet för denna radio. Lämna på Använd global standard eller lämna färgfälten tomma för att ärva globala standardvärden.
+
+PLUGIN_HASCREENSAVER_BACKGROUND_STYLE
+	DE	Hintergrund
+	EN	Background Style
+	ES	Estilo de fondo
+	FI	Taustatyyli
+	FR	Style d’arrière-plan
+	SV	Bakgrundsstil
+
+PLUGIN_HASCREENSAVER_BG_SLATE
+	DE	Schiefer Anthrazit (Standard)
+	EN	Slate Charcoal (Default)
+	ES	Pizarra carbón (predeterminado)
+	FI	Liuskekivi hiilenharmaa (oletus)
+	FR	Ardoise anthracite (par défaut)
+	SV	Skiffer antracit (standard)
+
+PLUGIN_HASCREENSAVER_BG_BLACK
+	DE	Tiefschwarz (Nacht)
+	EN	Pure Black (Night)
+	ES	Negro puro (noche)
+	FI	Täysmusta (yö)
+	FR	Noir pur (nuit)
+	SV	Helt svart (natt)
+
+PLUGIN_HASCREENSAVER_BG_MIDNIGHT
+	DE	Mitternachtsblau
+	EN	Midnight Navy
+	ES	Azul medianoche
+	FI	Keskiyönsininen
+	FR	Bleu nuit
+	SV	Midnattsblå
+
+PLUGIN_HASCREENSAVER_BG_EMBER
+	DE	Warmes Espresso
+	EN	Warm Espresso
+	ES	Espresso cálido
+	FI	Lämmin espresso
+	FR	Expresso chaleureux
+	SV	Varm espresso
+
+PLUGIN_HASCREENSAVER_BG_FOREST
+	DE	Tiefes Tannengrün
+	EN	Deep Pine
+	ES	Pino oscuro
+	FI	Tumma mänty
+	FR	Pin profond
+	SV	Djup tallgrön
+
+PLUGIN_HASCREENSAVER_BG_GRAPHITE
+	DE	Graphit Mono
+	EN	Graphite Mono
+	ES	Grafito mono
+	FI	Grafiitti mono
+	FR	Graphite mono
+	SV	Grafit mono
+
+PLUGIN_HASCREENSAVER_BG_VELVET
+	DE	Samtdunkelrot
+	EN	Velvet Dark Red
+	ES	Rojo oscuro terciopelo
+	FI	Samettinen tummanpunainen
+	FR	Rouge velours foncé
+	SV	Sammetsmörkröd
+
+PLUGIN_HASCREENSAVER_BG_SILVER
+	DE	Hellsilber (Weißes Radio)
+	EN	Bright Silver (White Radio)
+	ES	Plata claro (radio blanca)
+	FI	Vaalea hopea (valkoinen radio)
+	FR	Argent clair (radio blanche)
+	SV	Ljus silver (vit radio)
+
+PLUGIN_HASCREENSAVER_WEATHER_SIZE
+	DE	Wettersymbol-Größe
+	EN	Weather Glyph Size
+	ES	Tamaño del icono meteorológico
+	FI	Sääkuvakkeen koko
+	FR	Taille du symbole météo
+	SV	Storlek på väderikon
+
+PLUGIN_HASCREENSAVER_WEATHER_SIZE_LARGE
+	DE	Groß (Standard)
+	EN	Large (Default)
+	ES	Grande (predeterminado)
+	FI	Suuri (oletus)
+	FR	Grand (par défaut)
+	SV	Stor (standard)
+
+PLUGIN_HASCREENSAVER_WEATHER_SIZE_COMPACT
+	DE	Kompakt (Klassisch)
+	EN	Compact (Classic)
+	ES	Compacto (clásico)
+	FI	Kompakti (klassinen)
+	FR	Compact (classique)
+	SV	Kompakt (klassisk)
+
+PLUGIN_HASCREENSAVER_LABEL_SIZE
+	DE	Bezeichnungsgröße
+	EN	Label Size
+	ES	Tamaño de etiqueta
+	FI	Otsikon koko
+	FR	Taille du libellé
+	SV	Etikettstorlek
+
+PLUGIN_HASCREENSAVER_LABEL_WEIGHT
+	DE	Schriftstärke
+	EN	Weight
+	ES	Grosor
+	FI	Lihavointi
+	FR	Graisse
+	SV	Stil
+
+PLUGIN_HASCREENSAVER_VALUE_SIZE
+	DE	Wertgröße
+	EN	Value Size
+	ES	Tamaño de valor
+	FI	Arvon koko
+	FR	Taille des valeurs
+	SV	Värdestorlek
+
+PLUGIN_HASCREENSAVER_CLOCK_SIZE
+	DE	Uhrgröße
+	EN	Clock Size
+	ES	Tamaño del reloj
+	FI	Kellon koko
+	FR	Taille de l’heure
+	SV	Klockstorlek
+
+PLUGIN_HASCREENSAVER_SIZE_COMPACT
+	DE	Kompakt
+	EN	Compact
+	ES	Compacto
+	FI	Kompakti
+	FR	Compact
+	SV	Kompakt
+
+PLUGIN_HASCREENSAVER_SIZE_DEFAULT
+	DE	Standard
+	EN	Default
+	ES	Predeterminado
+	FI	Oletus
+	FR	Par défaut
+	SV	Standard
+
+PLUGIN_HASCREENSAVER_SIZE_MEDIUM
+	DE	Mittel (+2px)
+	EN	Medium (+2px)
+	ES	Mediano (+2px)
+	FI	Keskikoko (+2px)
+	FR	Moyen (+2px)
+	SV	Mellan (+2px)
+
+PLUGIN_HASCREENSAVER_SIZE_LARGE
+	DE	Groß
+	EN	Large
+	ES	Grande
+	FI	Suuri
+	FR	Grand
+	SV	Stor
+
+PLUGIN_HASCREENSAVER_WEIGHT_REGULAR
+	DE	Normal (Standard)
+	EN	Regular (Default)
+	ES	Normal (predeterminado)
+	FI	Normaali (oletus)
+	FR	Normal (par défaut)
+	SV	Normal (standard)
+
+PLUGIN_HASCREENSAVER_WEIGHT_BOLD
+	DE	Fett
+	EN	Bold
+	ES	Negrita
+	FI	Lihavoitu
+	FR	Gras
+	SV	Fet
+
+PLUGIN_HASCREENSAVER_COLOR_ELEMENT
+	DE	Element
+	EN	Element
+	ES	Elemento
+	FI	Elementti
+	FR	Élément
+	SV	Element
+
+PLUGIN_HASCREENSAVER_COLOR_HEX
+	DE	Benutzerdefinierte Hex-Farbe (leer = Standard)
+	EN	Custom Hex Color (blank = default)
+	ES	Color hexadecimal personalizado (vacío = predeterminado)
+	FI	Mukautettu heksaväri (tyhjä = oletus)
+	FR	Couleur hexadécimale personnalisée (vide = par défaut)
+	SV	Anpassad hex-färg (tom = standard)
+
+PLUGIN_HASCREENSAVER_CLOCK_COLOR
+	DE	Uhrfarbe
+	EN	Clock Color
+	ES	Color del reloj
+	FI	Kellon väri
+	FR	Couleur de l’heure
+	SV	Klockfärg
+
+PLUGIN_HASCREENSAVER_VALUE_COLOR
+	DE	Sensorwert-Farbe
+	EN	Sensor Value Color
+	ES	Color del valor
+	FI	Anturiarvon väri
+	FR	Couleur des valeurs
+	SV	Färg på sensorvärde
+
+PLUGIN_HASCREENSAVER_LABEL_COLOR
+	DE	Bezeichnungsfarbe
+	EN	Label Color
+	ES	Color de etiqueta
+	FI	Otsikon väri
+	FR	Couleur des libellés
+	SV	Etikettfärg
+
+PLUGIN_HASCREENSAVER_UNIT_COLOR
+	DE	Einheitenfarbe
+	EN	Unit Color
+	ES	Color de unidad
+	FI	Yksikön väri
+	FR	Couleur des unités
+	SV	Enhetsfärg
 
 PLUGIN_HASCREENSAVER_REPO_SECTION
 	DE	Lokales Repository für Radio-Applets
 	EN	Local Radio Applet Repository
+	ES	Repositorio local de applets de radio
+	FI	Paikallinen radiosovelmien pakettivarasto
 	FR	Dépôt local des applets radio
+	SV	Lokalt arkiv för radioappletar
 
 PLUGIN_HASCREENSAVER_REPO_DESC
 	DE	Diese URL unter Einstellungen &gt; Plugins &gt; Zusätzliche Repositorys hinzufügen, um den Bildschirmschoner über den Applet-Installer auf Squeezebox-Radios zu installieren:
 	EN	Add this URL under Settings &gt; Plugins &gt; Additional Repositories to install the screensaver onto Squeezebox Radios via Applet Installer:
+	ES	Añada esta URL en Ajustes &gt; Complementos &gt; Repositorios adicionales para instalar el salvapantallas en Squeezebox Radio mediante Applet Installer:
+	FI	Lisää tämä osoite kohtaan Asetukset &gt; Lisäosat &gt; Lisäpakettivarastot asentaaksesi näytönsäästäjän Squeezebox Radioihin Applet Installerin kautta:
 	FR	Ajoutez cette URL sous Paramètres &gt; Plugins &gt; Dépôts supplémentaires pour installer l’économiseur d’écran sur les Squeezebox Radios via l’Applet Installer :
+	SV	Lägg till denna URL under Inställningar &gt; Tillägg &gt; Ytterligare arkiv för att installera skärmsläckaren på Squeezebox Radio via Applet Installer:
 
 PLUGIN_HASCREENSAVER_PER_RADIO_SECTION
 	DE	Radio-spezifische Überschreibungen
 	EN	Per-Radio Overrides
+	ES	Ajustes por radio
+	FI	Radiokohtaiset ohitukset
 	FR	Remplacements par radio
+	SV	Åsidosättningar per radio
 
 PLUGIN_HASCREENSAVER_PER_RADIO_DESC
 	DE	Einzelne Radios unter Einstellungen &gt; Player &gt; [Radio auswählen] &gt; Home Assistant Bildschirmschoner anpassen (oder in Material Skin: Playereinstellungen &gt; [Radio] &gt; Zusätzliche Einstellungen &gt; Home Assistant Bildschirmschoner). Radios ohne Überschreibungen verwenden die oben festgelegten globalen Standards.
 	EN	Customize individual radios under Settings &gt; Player &gt; [Select Radio] &gt; Home Assistant Screensaver (or in Material Skin: Player Settings &gt; [Radio] &gt; Extra Settings &gt; Home Assistant Screensaver). Any radio without overrides uses the Global Defaults above.
+	ES	Personalice radios individuales en Ajustes &gt; Reproductor &gt; [Seleccionar radio] &gt; Salvapantallas de Home Assistant (o en Material Skin: Ajustes del reproductor &gt; [Radio] &gt; Ajustes adicionales). Las radios sin ajustes propios usan los valores globales.
+	FI	Mukauta yksittäisiä radioita kohdassa Asetukset &gt; Soitin &gt; [Valitse radio] &gt; Home Assistant -näytönsäästäjä (tai Material Skinissä: Soitinasetukset &gt; [Radio] &gt; Lisäasetukset). Radiot ilman ohituksia käyttävät yllä olevia yleisiä oletuksia.
 	FR	Personnalisez les radios individuelles sous Paramètres &gt; Lecteur &gt; [Sélectionner la radio] &gt; Économiseur d’écran Home Assistant (ou dans Material Skin : Paramètres du lecteur &gt; [Radio] &gt; Paramètres supplémentaires &gt; Économiseur d’écran Home Assistant). Toute radio sans remplacement utilise les valeurs globales par défaut ci-dessus.
+	SV	Anpassa enskilda radioapparater under Inställningar &gt; Spelare &gt; [Välj radio] &gt; Home Assistant-skärmsläckare (eller i Material Skin: Spelarinställningar &gt; [Radio] &gt; Extra inställningar). Radioapparater utan åsidosättningar använder de globala standardvärdena ovan.
 
 PLUGIN_HASCREENSAVER_PLAYER_NAME
 	DE	Player
 	EN	Player
+	ES	Reproductor
+	FI	Soitin
 	FR	Lecteur
+	SV	Spelare
 
 PLUGIN_HASCREENSAVER_PLAYER_MODEL
 	DE	Modell
 	EN	Model
+	ES	Modelo
+	FI	Malli
 	FR	Modèle
+	SV	Modell
 
 PLUGIN_HASCREENSAVER_PLAYER_CONFIG
 	DE	Aktive Konfiguration
 	EN	Active Configuration
+	ES	Configuración activa
+	FI	Aktiivinen kokoonpano
 	FR	Configuration active
+	SV	Aktiv konfiguration
 
 PLUGIN_HASCREENSAVER_NO_PLAYERS
 	DE	Zurzeit sind keine Player verbunden.
 	EN	No players currently connected.
+	ES	No hay reproductores conectados actualmente.
+	FI	Yhtään soitinta ei ole yhdistettynä.
 	FR	Aucun lecteur actuellement connecté.
+	SV	Inga spelare är anslutna just nu.
 
 PLUGIN_HASCREENSAVER_PLAYER_INTRO
 	DE	Radio-spezifische Bildschirmschoner-Überschreibungen
 	EN	Per-Radio Screensaver Overrides
+	ES	Ajustes del salvapantallas por radio
+	FI	Radiokohtaiset näytönsäästäjän ohitukset
 	FR	Remplacements de l’économiseur d’écran par radio
+	SV	Radiospecifika skärmsläckarinställningar
 
 PLUGIN_HASCREENSAVER_PLAYER_INTRO_DESC
 	DE	Passen Sie an, was dieses Radio anzeigt. Jede Entitäts-ID leer lassen, um den globalen Standard zu übernehmen, eine Entitäts-ID eingeben, um diesen Slot nur für dieses Radio zu überschreiben, oder „none“ eingeben, um einen globalen Standard für dieses Radio auszublenden.
 	EN	Customize what this radio displays. Leave any Entity ID blank to inherit the Global Default, enter an Entity ID to override that slot for this radio only, or enter "none" to hide a Global Default on this radio.
+	ES	Personalice lo que muestra esta radio. Deje cualquier ID de entidad vacío para heredar el valor global, introduzca un ID para sobrescribirlo solo en esta radio o escriba «none» para ocultar un valor global.
+	FI	Mukauta tämän radion näkymää. Jätä entiteetin tunnus tyhjäksi periäksesi yleisen oletuksen, syötä entiteetin tunnus ohittaaksesi paikan vain tässä radiossa tai syötä "none" piilottaaksesi yleisen oletuksen.
 	FR	Personnalisez l’affichage de cette radio. Laissez toute ID d’entité vide pour utiliser la valeur globale par défaut, saisissez une ID d’entité pour remplacer cet emplacement uniquement sur cette radio, ou saisissez « none » pour masquer une valeur globale par défaut sur cette radio.
+	SV	Anpassa vad denna radio visar. Lämna ett entitets-ID tomt för att ärva global standard, ange ett entitets-ID för att åsidosätta platsen endast för denna radio eller ange "none" för att dölja en global standard.
 
 PLUGIN_HASCREENSAVER_PLAYER_STATUS
 	DE	Aktive Überschreibungen
 	EN	Active Overrides
+	ES	Ajustes activos
+	FI	Aktiiviset ohitukset
 	FR	Remplacements actifs
+	SV	Aktiva åsidosättningar
 
 PLUGIN_HASCREENSAVER_PLAYER_FONT_DESC
 	DE	Optional die Uhrschrift für dieses Radio überschreiben oder den globalen Standard verwenden.
 	EN	Optionally override the clock font for this radio, or use the Global Default.
+	ES	Sobrescriba opcionalmente la fuente del reloj para esta radio o use el valor global.
+	FI	Ohita valinnaisesti kellon fontti tälle radiolle tai käytä yleistä oletusta.
 	FR	Vous pouvez remplacer la police de l’heure pour cette radio ou utiliser la valeur globale par défaut.
+	SV	Åsidosätt valfritt klocktypsnittet för denna radio eller använd global standard.
 
 PLUGIN_HASCREENSAVER_USE_GLOBAL_DEFAULT
 	DE	Globalen Standard verwenden
 	EN	Use Global Default
+	ES	Usar valor global
+	FI	Käytä yleistä oletusta
 	FR	Utiliser la valeur globale par défaut
+	SV	Använd global standard
 
 PLUGIN_HASCREENSAVER_PLAYER_WEATHER_DESC
 	DE	Leer lassen, um die globale Standard-Wetterentität zu übernehmen, eine weather.*-Entität zum Überschreiben eingeben oder „none“ eingeben, um das Wetter für dieses Radio auszublenden.
 	EN	Leave blank to inherit the Global Default weather entity, enter a weather.* entity to override, or enter "none" to hide weather on this radio.
+	ES	Déjelo vacío para heredar la entidad meteorológica global, introduzca una entidad weather.* para sobrescribirla o escriba «none» para ocultar el tiempo en esta radio.
+	FI	Jätä tyhjäksi periäksesi yleisen sääentiteetin, syötä weather.*-entiteetti ohittaaksesi sen tai syötä "none" piilottaaksesi sään tässä radiossa.
 	FR	Laissez ce champ vide pour utiliser l’entité météo globale par défaut, saisissez une entité weather.* pour la remplacer, ou saisissez « none » pour masquer la météo sur cette radio.
+	SV	Lämna tomt för att ärva den globala väderentiteten, ange en weather.*-entitet för att åsidosätta eller ange "none" för att dölja väder på denna radio.
 
 PLUGIN_HASCREENSAVER_PLAYER_ALERT_DESC
 	DE	Leer lassen, um den globalen Standardalarm zu übernehmen, eine Entitäts-ID (z. B. sensor.open_doors) eingeben, um Alarme für dieses Radio zu aktivieren oder zu überschreiben, oder „none“ eingeben, um einen globalen Standardalarm auszublenden.
 	EN	Leave blank to inherit the Global Default alert, enter an entity ID (e.g. sensor.open_doors) to enable or override alerts on this radio, or enter "none" to hide a Global Default alert.
+	ES	Déjelo vacío para heredar la alerta global, introduzca un ID de entidad (p. ej. sensor.open_doors) para activar o sobrescribir alertas en esta radio o escriba «none» para ocultar la alerta global.
+	FI	Jätä tyhjäksi periäksesi yleisen hälytyksen, syötä entiteetin tunnus (esim. sensor.open_doors) ottaaksesi hälytyksen käyttöön tai ohittaaksesi sen, tai syötä "none" piilottaaksesi yleisen hälytyksen.
 	FR	Laissez ce champ vide pour utiliser l’alerte globale par défaut, saisissez une ID d’entité (par exemple sensor.open_doors) pour activer ou remplacer les alertes sur cette radio, ou saisissez « none » pour masquer une alerte globale par défaut.
+	SV	Lämna tomt för att ärva det globala larmet, ange ett entitets-ID (t.ex. sensor.open_doors) för att aktivera eller åsidosätta larm på denna radio, eller ange "none" för att dölja ett globalt larm.
 
 PLUGIN_HASCREENSAVER_PLAYER_SENSORS_DESC
 	DE	Eine Reihe leer lassen, um diesen globalen Standard-Slot zu übernehmen, eine Entitäts-ID (z. B. sensor.*, binary_sensor.*, lock.*, cover.*) eingeben, um diesen Slot für dieses Radio zu überschreiben, oder „none“ eingeben, um diesen globalen Standard-Slot auszublenden.
 	EN	Leave a row blank to inherit that Global Default slot, enter an Entity ID (e.g. sensor.*, binary_sensor.*, lock.*, cover.*) to override that slot for this radio, or enter "none" to hide that Global Default slot.
+	ES	Deje una fila vacía para heredar esa ranura global, introduzca un ID de entidad (p. ej. sensor.*, binary_sensor.*, lock.*, cover.*) para sobrescribirla en esta radio o escriba «none» para ocultarla.
+	FI	Jätä rivi tyhjäksi periäksesi kyseisen yleisen oletuspaikan, syötä entiteetin tunnus (esim. sensor.*, binary_sensor.*, lock.*, cover.*) ohittaaksesi sen tälle radiolle tai syötä "none" piilottaaksesi paikan.
 	FR	Laissez une ligne vide pour utiliser l’emplacement global par défaut correspondant, saisissez une ID d’entité (par exemple sensor.*, binary_sensor.*, lock.*, cover.*) pour remplacer cet emplacement sur cette radio, ou saisissez « none » pour masquer cet emplacement global par défaut.
+	SV	Lämna en rad tom för att ärva motsvarande globala standardplats, ange ett entitets-ID (t.ex. sensor.*, binary_sensor.*, lock.*, cover.*) för att åsidosätta platsen på denna radio eller ange "none" för att dölja den.
 
 PLUGIN_HASCREENSAVER_GLOBAL_DEFAULT_LABEL
 	DE	Globaler Standard
 	EN	Global default
+	ES	Valor global
+	FI	Yleinen oletus
 	FR	Valeur globale par défaut
+	SV	Global standard
 
 PLUGIN_HASCREENSAVER_NOT_SET
 	DE	nicht festgelegt
 	EN	not set
+	ES	sin definir
+	FI	ei asetettu
 	FR	non défini
+	SV	inte angiven
 
 PLUGIN_HASCREENSAVER_PLAYER_RESET_SECTION
 	DE	Überschreibungen zurücksetzen
 	EN	Reset Overrides
+	ES	Restablecer ajustes
+	FI	Nollaa ohitukset
 	FR	Réinitialiser les remplacements
+	SV	Återställ åsidosättningar
 
 PLUGIN_HASCREENSAVER_PLAYER_RESET_DESC
 	DE	Alle benutzerdefinierten Einstellungen dieses Radios löschen, damit es zu den globalen Standards zurückkehrt.
 	EN	Clear all custom settings on this radio so it returns to Global Defaults.
+	ES	Borre todos los ajustes personalizados de esta radio para volver a los valores globales.
+	FI	Tyhjennä kaikki tämän radion mukautetut asetukset palauttaaksesi yleiset oletukset.
 	FR	Effacer tous les paramètres personnalisés de cette radio afin qu’elle retrouve les valeurs globales par défaut.
+	SV	Rensa alla anpassade inställningar på denna radio så att den återgår till globala standardvärden.
 
 PLUGIN_HASCREENSAVER_PLAYER_RESET_LABEL
 	DE	Beim Anwenden alle Überschreibungen dieses Radios auf die globalen Standards zurücksetzen
 	EN	Reset all overrides on this radio back to Global Defaults on Apply
+	ES	Restablecer todos los ajustes de esta radio a los valores globales al aplicar
+	FI	Palauta kaikki tämän radion ohitukset yleisiin oletuksiin tallennettaessa
 	FR	Réinitialiser tous les remplacements de cette radio vers les valeurs globales par défaut lors de l’application
+	SV	Återställ alla åsidosättningar på denna radio till globala standardvärden vid spara

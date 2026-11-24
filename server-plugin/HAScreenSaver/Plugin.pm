@@ -17,7 +17,7 @@ use Slim::Utils::Log;
 use Slim::Utils::Prefs;
 use Slim::Web::Pages;
 
-our $VERSION = '1.5.1';
+our $VERSION = '2.0.0';
 
 my $log = Slim::Utils::Log->addLogCategory({
     category     => 'plugin.hascreensaver',
@@ -32,6 +32,34 @@ my %ALLOWED_FONTS = map { $_ => 1 } (
     'FreeSans',
     'FreeMonoBold',
     'FreeSerifBold',
+);
+
+my %ALLOWED_BACKGROUNDS = map { $_ => 1 } (
+    'slate',
+    'black',
+    'midnight',
+    'ember',
+    'forest',
+    'graphite',
+    'velvet',
+    'silver',
+);
+
+my %ALLOWED_WEATHER_SIZES = map { $_ => 1 } (
+    'large',
+    'compact',
+);
+
+my %ALLOWED_LABEL_SIZES = map { $_ => 1 } (
+    'default',
+    'medium',
+    'large',
+);
+
+my %ALLOWED_SCALE_SIZES = map { $_ => 1 } (
+    'compact',
+    'default',
+    'large',
 );
 
 my %INACTIVE_ALERT_STATES = map { $_ => 1 } (
@@ -60,16 +88,17 @@ my %WEATHER_ICON_MAP = (
     'rainy'           => 'rainy',
     'rain'            => 'rainy',
     'pouring'         => 'pouring',
+    'hail'            => 'hail',
     'snowy'           => 'snowy',
     'snow'            => 'snowy',
-    'snowy-rainy'     => 'snowy',
-    'hail'            => 'pouring',
+    'snowy-rainy'     => 'snowy_rainy',
     'fog'             => 'fog',
     'mist'            => 'fog',
     'lightning'       => 'lightning',
-    'lightning-rainy' => 'lightning',
+    'lightning-rainy' => 'lightning_rainy',
     'windy'           => 'windy',
-    'windy-variant'   => 'windy',
+    'windy-variant'   => 'windy_variant',
+    'exceptional'     => 'exceptional',
 );
 
 # Fallback English labels for binary_sensor device_class when HA /api/template
@@ -135,6 +164,16 @@ sub initPlugin {
         ha_token         => '',
         poll_interval    => 60,
         font_name        => 'FreeSansBold',
+        background_style => 'slate',
+        weather_size     => 'large',
+        label_size       => 'default',
+        label_bold       => '0',
+        value_size       => 'default',
+        clock_size       => 'default',
+        clock_color      => '',
+        value_color      => '',
+        label_color      => '',
+        unit_color       => '',
         weather_entity   => '',
         alert_entity     => '',
         alert_label      => 'Open',
@@ -246,9 +285,59 @@ sub sanitizeFontName {
     return $ALLOWED_FONTS{$font} ? $font : 'FreeSansBold';
 }
 
+sub sanitizeBackgroundStyle {
+    my ($style) = @_;
+    $style = lc(_trim($style));
+    return $ALLOWED_BACKGROUNDS{$style} ? $style : 'slate';
+}
+
+sub sanitizeWeatherSize {
+    my ($size) = @_;
+    $size = lc(_trim($size));
+    return $ALLOWED_WEATHER_SIZES{$size} ? $size : 'large';
+}
+
+sub sanitizeLabelSize {
+    my ($size) = @_;
+    $size = lc(_trim($size));
+    return $ALLOWED_LABEL_SIZES{$size} ? $size : 'default';
+}
+
+sub sanitizeScaleSize {
+    my ($size) = @_;
+    $size = lc(_trim($size));
+    return $ALLOWED_SCALE_SIZES{$size} ? $size : 'default';
+}
+
+sub sanitizeBoolFlag {
+    my ($val) = @_;
+    $val = _trim($val);
+    return ($val eq '1' || lc($val) eq 'true') ? '1' : '0';
+}
+
+sub sanitizeHexColor {
+    my ($val) = @_;
+    $val = _trim($val);
+    return '' if $val eq '';
+    if ($val =~ /^#?([0-9A-Fa-f]{6})$/) {
+        return '#' . uc($1);
+    }
+    return '';
+}
+
 sub playerPrefKeys {
     return (
         'player_font_name',
+        'player_background_style',
+        'player_weather_size',
+        'player_label_size',
+        'player_label_bold',
+        'player_value_size',
+        'player_clock_size',
+        'player_clock_color',
+        'player_value_color',
+        'player_label_color',
+        'player_unit_color',
         'player_weather_entity',
         'player_alert_entity',
         'player_alert_label',
@@ -285,6 +374,71 @@ sub resolveEffectiveConfig {
         $fontName     = sanitizeFontName($pFont);
     } else {
         $fontName = sanitizeFontName($prefObj ? $prefObj->get('font_name') : undef);
+    }
+
+    my $pBg = $cprefs ? _trim($cprefs->get('player_background_style')) : '';
+    my $backgroundStyle;
+    if ($pBg ne '') {
+        $hasOverrides    = 1;
+        $backgroundStyle = sanitizeBackgroundStyle($pBg);
+    } else {
+        $backgroundStyle = sanitizeBackgroundStyle($prefObj ? $prefObj->get('background_style') : undef);
+    }
+
+    my $pWeatherSize = $cprefs ? _trim($cprefs->get('player_weather_size')) : '';
+    my $weatherSize;
+    if ($pWeatherSize ne '') {
+        $hasOverrides = 1;
+        $weatherSize  = sanitizeWeatherSize($pWeatherSize);
+    } else {
+        $weatherSize = sanitizeWeatherSize($prefObj ? $prefObj->get('weather_size') : undef);
+    }
+
+    my $pLabelSize = $cprefs ? _trim($cprefs->get('player_label_size')) : '';
+    my $labelSize;
+    if ($pLabelSize ne '') {
+        $hasOverrides = 1;
+        $labelSize    = sanitizeLabelSize($pLabelSize);
+    } else {
+        $labelSize = sanitizeLabelSize($prefObj ? $prefObj->get('label_size') : undef);
+    }
+
+    my $pLabelBold = $cprefs ? _trim($cprefs->get('player_label_bold')) : '';
+    my $labelBold;
+    if (defined $pLabelBold && $pLabelBold ne '') {
+        $hasOverrides = 1;
+        $labelBold    = sanitizeBoolFlag($pLabelBold);
+    } else {
+        $labelBold = sanitizeBoolFlag($prefObj ? $prefObj->get('label_bold') : undef);
+    }
+
+    my $pValueSize = $cprefs ? _trim($cprefs->get('player_value_size')) : '';
+    my $valueSize;
+    if ($pValueSize ne '') {
+        $hasOverrides = 1;
+        $valueSize    = sanitizeScaleSize($pValueSize);
+    } else {
+        $valueSize = sanitizeScaleSize($prefObj ? $prefObj->get('value_size') : undef);
+    }
+
+    my $pClockSize = $cprefs ? _trim($cprefs->get('player_clock_size')) : '';
+    my $clockSize;
+    if ($pClockSize ne '') {
+        $hasOverrides = 1;
+        $clockSize    = sanitizeScaleSize($pClockSize);
+    } else {
+        $clockSize = sanitizeScaleSize($prefObj ? $prefObj->get('clock_size') : undef);
+    }
+
+    my %resolvedColors;
+    for my $ckey (qw(clock_color value_color label_color unit_color)) {
+        my $pCol = $cprefs ? sanitizeHexColor($cprefs->get("player_$ckey")) : '';
+        if ($pCol ne '') {
+            $hasOverrides          = 1;
+            $resolvedColors{$ckey} = $pCol;
+        } else {
+            $resolvedColors{$ckey} = sanitizeHexColor($prefObj ? $prefObj->get($ckey) : undef);
+        }
     }
 
     my $pWeather = $cprefs ? _trim($cprefs->get('player_weather_entity')) : '';
@@ -347,13 +501,23 @@ sub resolveEffectiveConfig {
     }
 
     return {
-        poll_interval  => $pollInterval,
-        font_name      => $fontName,
-        weather_entity => $weatherEntity,
-        alert_entity   => $alertEntity,
-        alert_label    => $alertLabel,
-        slots          => \@slots,
-        has_overrides  => $hasOverrides,
+        poll_interval    => $pollInterval,
+        font_name        => $fontName,
+        background_style => $backgroundStyle,
+        weather_size     => $weatherSize,
+        label_size       => $labelSize,
+        label_bold       => $labelBold,
+        value_size       => $valueSize,
+        clock_size       => $clockSize,
+        clock_color      => $resolvedColors{clock_color},
+        value_color      => $resolvedColors{value_color},
+        label_color      => $resolvedColors{label_color},
+        unit_color       => $resolvedColors{unit_color},
+        weather_entity   => $weatherEntity,
+        alert_entity     => $alertEntity,
+        alert_label      => $alertLabel,
+        slots            => \@slots,
+        has_overrides    => $hasOverrides,
     };
 }
 
@@ -366,6 +530,50 @@ sub describeOverrides {
     my $pFont = _trim($getter->('player_font_name'));
     if ($pFont ne '') {
         push @parts, 'Font (' . sanitizeFontName($pFont) . ')';
+    }
+
+    my $pBg = _trim($getter->('player_background_style'));
+    if ($pBg ne '') {
+        push @parts, 'Background (' . sanitizeBackgroundStyle($pBg) . ')';
+    }
+
+    my $pWeatherSize = _trim($getter->('player_weather_size'));
+    if ($pWeatherSize ne '') {
+        push @parts, 'Weather size (' . sanitizeWeatherSize($pWeatherSize) . ')';
+    }
+
+    my @labelParts;
+    my $pLabelSize = _trim($getter->('player_label_size'));
+    if ($pLabelSize ne '') {
+        push @labelParts, sanitizeLabelSize($pLabelSize);
+    }
+    my $pLabelBold = _trim($getter->('player_label_bold'));
+    if (defined $pLabelBold && $pLabelBold ne '') {
+        push @labelParts, sanitizeBoolFlag($pLabelBold) eq '1' ? 'bold' : 'regular';
+    }
+    if (@labelParts) {
+        push @parts, 'Label (' . join(', ', @labelParts) . ')';
+    }
+
+    my $pValueSize = _trim($getter->('player_value_size'));
+    if ($pValueSize ne '') {
+        push @parts, 'Value size (' . sanitizeScaleSize($pValueSize) . ')';
+    }
+
+    my $pClockSize = _trim($getter->('player_clock_size'));
+    if ($pClockSize ne '') {
+        push @parts, 'Clock size (' . sanitizeScaleSize($pClockSize) . ')';
+    }
+
+    my $hasCustomColor = 0;
+    for my $ckey (qw(clock_color value_color label_color unit_color)) {
+        if (sanitizeHexColor($getter->("player_$ckey")) ne '') {
+            $hasCustomColor = 1;
+            last;
+        }
+    }
+    if ($hasCustomColor) {
+        push @parts, 'Colors (custom)';
     }
 
     my $pWeather = _trim($getter->('player_weather_entity'));
@@ -640,16 +848,26 @@ sub handleRefreshRequest {
 sub _populateSensorsResponse {
     my ($request, $cfg, $alarmInfo, $weatherIcon, $alertRes, $results, $mode) = @_;
 
-    $request->addResult('poll_interval', $cfg->{poll_interval});
-    $request->addResult('font_name',     $cfg->{font_name});
-    $request->addResult('alarm_active',  $alarmInfo->{alarm_active});
-    $request->addResult('alarm_time',    $alarmInfo->{alarm_time});
-    $request->addResult('weather_icon',  $weatherIcon);
-    $request->addResult('alert_active',  $alertRes->{active});
-    $request->addResult('alert_text',    $alertRes->{text});
-    $request->addResult('sensors_loop',  $results);
-    $request->addResult('mode',          $mode);
-    $request->addResult('config_scope',  $cfg->{has_overrides} ? 'player' : 'default');
+    $request->addResult('poll_interval',    $cfg->{poll_interval});
+    $request->addResult('font_name',        $cfg->{font_name});
+    $request->addResult('background_style', $cfg->{background_style});
+    $request->addResult('weather_size',     $cfg->{weather_size});
+    $request->addResult('label_size',       $cfg->{label_size});
+    $request->addResult('label_bold',       $cfg->{label_bold});
+    $request->addResult('value_size',       $cfg->{value_size});
+    $request->addResult('clock_size',       $cfg->{clock_size});
+    $request->addResult('clock_color',      $cfg->{clock_color});
+    $request->addResult('value_color',      $cfg->{value_color});
+    $request->addResult('label_color',      $cfg->{label_color});
+    $request->addResult('unit_color',       $cfg->{unit_color});
+    $request->addResult('alarm_active',     $alarmInfo->{alarm_active});
+    $request->addResult('alarm_time',       $alarmInfo->{alarm_time});
+    $request->addResult('weather_icon',     $weatherIcon);
+    $request->addResult('alert_active',     $alertRes->{active});
+    $request->addResult('alert_text',       $alertRes->{text});
+    $request->addResult('sensors_loop',     $results);
+    $request->addResult('mode',             $mode);
+    $request->addResult('config_scope',     $cfg->{has_overrides} ? 'player' : 'default');
     $request->setStatusDone();
 }
 

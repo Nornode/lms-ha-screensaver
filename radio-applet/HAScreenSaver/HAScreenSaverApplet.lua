@@ -40,9 +40,10 @@ local COLOR_ALARM     = 0x8E98A8FF
 local COLOR_ALERT_BG  = 0xB8380EFF
 local COLOR_ALERT_TXT = 0xFFFFFFFF
 
-local ICON_ALARM_PATH = "applets/HAScreenSaver/icon_alarm.png"
-local ICON_DOOR_PATH  = "applets/HAScreenSaver/icon_door.png"
-local FALLBACK_FONT   = "fonts/FreeSansBold.ttf"
+local ICON_ALARM_PATH      = "applets/HAScreenSaver/icon_alarm.png"
+local ICON_ALARM_DARK_PATH = "applets/HAScreenSaver/icon_alarm_dark.png"
+local ICON_DOOR_PATH       = "applets/HAScreenSaver/icon_door.png"
+local FALLBACK_FONT        = "fonts/FreeSansBold.ttf"
 
 -- Compose 32-bit RGBA integer without Lua 5.2+ bitwise operators (Lua 5.1 safe)
 local function rgba(r, g, b, a)
@@ -54,18 +55,21 @@ function openScreensaver(self)
         return
     end
 
-    self.state       = Model.newState()
-    self.lastTimeStr = nil
-    self.lastTickMs  = nil
-    self.reqSeq      = 0
-    self.fonts       = {}
-    self.iconCache   = {}
+    self.state        = Model.newState()
+    self.colors       = Model.resolveColors(self.state)
+    self.bgStyle      = self.state.backgroundStyle
+    self.fontStyleKey = nil
+    self.lastTimeStr  = nil
+    self.lastTickMs   = nil
+    self.reqSeq       = 0
+    self.fonts        = {}
+    self.iconCache    = {}
 
     local screenW, screenH = Framework:getScreenSize()
     self.screenW = screenW or 320
     self.screenH = screenH or 240
 
-    self.bgSurface = self:_buildShadedBackground(self.screenW, self.screenH)
+    self.bgSurface = self:_buildShadedBackground(self.screenW, self.screenH, self.bgStyle)
 
     local window = Window("window")
     window:setAllowScreensaver(false)
@@ -174,11 +178,36 @@ function _requestRedraw(self)
     end
 end
 
-function _buildShadedBackground(self, w, h)
-    -- Pre-render a smooth dark charcoal-to-near-black vertical gradient once per session
+function _buildShadedBackground(self, w, h, styleId)
+    -- Pre-render background once per session/style change (Lua 5.1 safe)
     local bg = Surface:newRGBA(w, h)
-    local topR, topG, topB = 28, 34, 44
-    local botR, botG, botB = 6, 8, 12
+    local id = styleId or "slate"
+    if id == "slate" then
+        -- Exact v1.5.1 legacy gradient path
+        local topR, topG, topB = 28, 34, 44
+        local botR, botG, botB = 6, 8, 12
+
+        local bandStep = math.max(2, math.floor(h / 120 + 0.5))
+        for y = 0, h - 1, bandStep do
+            local t = y / (h - 1)
+            local r = math.floor(topR + (botR - topR) * t + 0.5)
+            local g = math.floor(topG + (botG - topG) * t + 0.5)
+            local b = math.floor(topB + (botB - topB) * t + 0.5)
+            local y2 = y + bandStep - 1
+            if y2 >= h then y2 = h - 1 end
+            bg:filledRectangle(0, y, w - 1, y2, rgba(r, g, b, 255))
+        end
+        return bg
+    end
+
+    local preset = Model.resolveBackgroundPreset(id)
+    local topR, topG, topB = preset.top[1], preset.top[2], preset.top[3]
+    local botR, botG, botB = preset.bot[1], preset.bot[2], preset.bot[3]
+
+    if topR == botR and topG == botG and topB == botB then
+        bg:filledRectangle(0, 0, w - 1, h - 1, rgba(topR, topG, topB, 255))
+        return bg
+    end
 
     local bandStep = math.max(2, math.floor(h / 120 + 0.5))
     for y = 0, h - 1, bandStep do
@@ -224,15 +253,18 @@ function _cleanup(self)
     if jnt then
         jnt:unsubscribe(self)
     end
-    self.window      = nil
-    self.canvas      = nil
-    self.bgSurface   = nil
-    self.fonts       = nil
-    self.iconCache   = nil
-    self.state       = nil
-    self.lastTimeStr = nil
-    self.lastTickMs  = nil
-    self.reqSeq      = nil
+    self.window       = nil
+    self.canvas       = nil
+    self.bgSurface    = nil
+    self.bgStyle      = nil
+    self.colors       = nil
+    self.fontStyleKey = nil
+    self.fonts        = nil
+    self.iconCache    = nil
+    self.state        = nil
+    self.lastTimeStr  = nil
+    self.lastTickMs   = nil
+    self.reqSeq       = nil
 end
 
 function _onClockTick(self)
@@ -371,6 +403,17 @@ function _fetchFromServer(self)
                 end
                 local prevInterval = self.state.pollIntervalMs
                 Model.applyServerPayload(self.state, chunk.data, Framework:getTicks())
+                self.colors = Model.resolveColors(self.state)
+
+                local styleKey = tostring(self.state.fontName)
+                    .. ":" .. tostring(self.state.labelSize)
+                    .. ":" .. tostring(self.state.labelBold)
+                    .. ":" .. tostring(self.state.valueSize)
+                    .. ":" .. tostring(self.state.clockSize)
+                if self.fontStyleKey and self.fontStyleKey ~= styleKey then
+                    self.fonts = {}
+                end
+                self.fontStyleKey = styleKey
 
                 if self.state.pollIntervalMs ~= prevInterval and self.pollTimer then
                     self.pollTimer:setInterval(self.state.pollIntervalMs)
@@ -429,7 +472,7 @@ function _truncateText(self, font, text, maxWidth)
 end
 
 -- Draw a single sensor cell with large bright value, smaller softer unit, and subtle label
-function _drawSensorCell(self, surf, sensor, x, y, width, height, align, labelFont, valueFont, unitFont, layout)
+function _drawSensorCell(self, surf, sensor, x, y, width, height, align, labelFont, valueFont, unitFont, layout, colors)
     if not sensor then
         return
     end
@@ -440,13 +483,18 @@ function _drawSensorCell(self, surf, sensor, x, y, width, height, align, labelFo
     local labelGap    = (layout and layout.cellLabelGap) or 1
     local minValW     = (layout and layout.cellMinValW) or 24
 
-    local valColor = sensor.ok and COLOR_VALUE or COLOR_STALE
+    local colValue = (colors and colors.value) or COLOR_VALUE
+    local colStale = (colors and colors.stale) or COLOR_STALE
+    local colUnit  = (colors and colors.unit)  or COLOR_UNIT
+    local colLabel = (colors and colors.label) or COLOR_LABEL
+
+    local valColor = sensor.ok and colValue or colStale
     local valStr   = sensor.value or "--"
     local unitStr  = (valStr ~= "--" and sensor.unit) or ""
 
     if align == "row" then
         local rowGap   = (layout and layout.colGap) or 8
-        local unitSurf = (unitStr ~= "") and Surface:drawText(unitFont, COLOR_UNIT, unitStr) or nil
+        local unitSurf = (unitStr ~= "") and Surface:drawText(unitFont, colUnit, unitStr) or nil
         local uw, uh   = 0, 0
         if unitSurf then
             uw, uh = unitSurf:getSize()
@@ -463,7 +511,7 @@ function _drawSensorCell(self, surf, sensor, x, y, width, height, align, labelFo
         local maxLblW = width - combinedW - rowGap
         if maxLblW < minValW then maxLblW = minValW end
         local lblStr  = self:_truncateText(labelFont, sensor.label or "", maxLblW)
-        local lblSurf = (lblStr ~= "") and Surface:drawText(labelFont, COLOR_LABEL, lblStr) or nil
+        local lblSurf = (lblStr ~= "") and Surface:drawText(labelFont, colLabel, lblStr) or nil
         local lw, lh  = 0, 0
         if lblSurf then
             lw, lh = lblSurf:getSize()
@@ -487,7 +535,7 @@ function _drawSensorCell(self, surf, sensor, x, y, width, height, align, labelFo
 
     local lblStr   = self:_truncateText(labelFont, sensor.label or "", width)
 
-    local unitSurf = (unitStr ~= "") and Surface:drawText(unitFont, COLOR_UNIT, unitStr) or nil
+    local unitSurf = (unitStr ~= "") and Surface:drawText(unitFont, colUnit, unitStr) or nil
     local uw, uh   = 0, 0
     if unitSurf then
         uw, uh = unitSurf:getSize()
@@ -502,7 +550,7 @@ function _drawSensorCell(self, surf, sensor, x, y, width, height, align, labelFo
 
     local combinedW = vw + (unitSurf and (uw + unitGap) or 0)
 
-    local lblSurf = (lblStr ~= "") and Surface:drawText(labelFont, COLOR_LABEL, lblStr) or nil
+    local lblSurf = (lblStr ~= "") and Surface:drawText(labelFont, colLabel, lblStr) or nil
     local lw, lh  = 0, 0
     if lblSurf then
         lw, lh = lblSurf:getSize()
@@ -553,32 +601,55 @@ function _drawOnScreen(self, surf)
     if not sw or not sh then
         sw, sh = Framework:getScreenSize()
     end
-    if sw and sh and (sw ~= self.screenW or sh ~= self.screenH) then
-        self.screenW   = sw
-        self.screenH   = sh
-        self.bgSurface = self:_buildShadedBackground(sw, sh)
-        self.fonts     = {}
-        self.iconCache = {}
+    local state  = self.state
+    local colors = self.colors or Model.resolveColors(state)
+    local targetStyle = state.backgroundStyle or "slate"
+
+    local sizeChanged  = (sw and sh and (sw ~= self.screenW or sh ~= self.screenH))
+    local styleChanged = (targetStyle ~= self.bgStyle)
+    if sizeChanged or styleChanged then
+        if sizeChanged then
+            self.screenW   = sw
+            self.screenH   = sh
+            self.fonts     = {}
+            self.iconCache = {}
+        end
+        self.bgStyle   = targetStyle
+        -- Free previous full-screen surface before allocating the new one (64MB RAM hygiene)
+        self.bgSurface = nil
+        self.bgSurface = self:_buildShadedBackground(self.screenW, self.screenH, self.bgStyle)
     end
 
-    local w     = self.screenW
-    local h     = self.screenH
-    local state = self.state
+    local w = self.screenW
+    local h = self.screenH
 
-    -- 1. Blit pre-rendered dark shaded gradient background
+    -- 1. Blit pre-rendered shaded/flat background
     if self.bgSurface then
         self.bgSurface:blit(surf, 0, 0)
     else
         surf:filledRectangle(0, 0, w - 1, h - 1, rgba(10, 12, 16, 255))
     end
 
-    local weatherPath = Model.resolveWeatherIconPath(state.weatherIcon)
+    local styleOpts = {
+        weatherSize = state.weatherSize,
+        labelSize   = state.labelSize,
+        valueSize   = state.valueSize,
+        clockSize   = state.clockSize,
+    }
+    local weatherPath = Model.resolveWeatherIconPath(state.weatherIcon, colors.isLight)
     local hasWeatherHint = (weatherPath ~= nil)
     local hasTopBar   = state.alarmActive or (state.alertActive and state.alertText ~= "")
-    local layout      = Model.computeLayout(w, h, #state.sensors, hasTopBar, hasWeatherHint)
-    local weatherImg  = weatherPath and self:_getIcon(weatherPath, layout.scale) or nil
+    local layout      = Model.computeLayout(w, h, #state.sensors, hasTopBar, hasWeatherHint, styleOpts)
+    local weatherScale = layout.scale * (layout.weatherScale or 1.0)
+    local weatherImg  = weatherPath and self:_getIcon(weatherPath, weatherScale) or nil
+    if not weatherImg and colors.isLight and state.weatherIcon ~= "" then
+        local fallbackWeather = Model.resolveWeatherIconPath(state.weatherIcon, false)
+        if fallbackWeather then
+            weatherImg = self:_getIcon(fallbackWeather, weatherScale)
+        end
+    end
     if hasWeatherHint and not weatherImg then
-        layout = Model.computeLayout(w, h, #state.sensors, hasTopBar, false)
+        layout = Model.computeLayout(w, h, #state.sensors, hasTopBar, false, styleOpts)
     end
 
     local clockFontPath = Model.resolveFontPath(state.fontName)
@@ -587,9 +658,13 @@ function _drawOnScreen(self, surf)
     -- 2. Top bar: Optional Door Alert Pill (top-left) + Optional Alarm Icon & Time (top-right)
     local alarmReserveW = 0
     if state.alarmActive and uiFontBold then
-        local alarmIcon = self:_getIcon(ICON_ALARM_PATH, layout.scale)
+        local alarmPath = colors.isLight and ICON_ALARM_DARK_PATH or ICON_ALARM_PATH
+        local alarmIcon = self:_getIcon(alarmPath, layout.scale)
+        if not alarmIcon and colors.isLight then
+            alarmIcon = self:_getIcon(ICON_ALARM_PATH, layout.scale)
+        end
         local timeText  = (state.alarmTime ~= "") and state.alarmTime or "ON"
-        local timeSurf  = Surface:drawText(uiFontBold, COLOR_ALARM, timeText)
+        local timeSurf  = Surface:drawText(uiFontBold, colors.alarm, timeText)
         local tw, th    = timeSurf:getSize()
         local iw, ih    = 0, 0
         if alarmIcon then
@@ -619,13 +694,13 @@ function _drawOnScreen(self, surf)
             end
             local iconPad  = doorIcon and (dw + layout.pillIconGap) or 0
             local alertStr = self:_truncateText(uiFontBold, state.alertText, maxAlertW - iconPad - layout.pillPadX)
-            local alertSurf = Surface:drawText(uiFontBold, COLOR_ALERT_TXT, alertStr)
+            local alertSurf = Surface:drawText(uiFontBold, colors.alertTxt, alertStr)
             local tw, th = alertSurf:getSize()
             local pillW = tw + iconPad + layout.pillPadX
             local pillH = math.max(th + layout.pillPadY, layout.pillMinH)
             local px    = layout.pillX
             local py    = layout.pillY
-            surf:filledRectangle(px, py, px + pillW, py + pillH, COLOR_ALERT_BG)
+            surf:filledRectangle(px, py, px + pillW, py + pillH, colors.alertBg)
             if doorIcon then
                 doorIcon:blit(surf, px + layout.pillIconGap, py + math.floor((pillH - dh) / 2))
             end
@@ -639,7 +714,7 @@ function _drawOnScreen(self, surf)
 
     local clockFont   = self:_getFont(clockFontPath, layout.clockFontSize)
     if clockFont then
-        local clockSurf = Surface:drawText(clockFont, COLOR_CLOCK, timeStr)
+        local clockSurf = Surface:drawText(clockFont, colors.clock, timeStr)
         local cw, ch    = clockSurf:getSize()
         local maxClockW = math.floor(w * 0.92)
         if cw > maxClockW and cw > 0 then
@@ -647,11 +722,11 @@ function _drawOnScreen(self, surf)
             local clampedFont = self:_getFont(clockFontPath, clampedSize)
             if clampedFont then
                 clockFont = clampedFont
-                clockSurf = Surface:drawText(clockFont, COLOR_CLOCK, timeStr)
+                clockSurf = Surface:drawText(clockFont, colors.clock, timeStr)
                 cw, ch    = clockSurf:getSize()
             end
         end
-        local shadowSurf = Surface:drawText(clockFont, COLOR_SHADOW, timeStr)
+        local shadowSurf = Surface:drawText(clockFont, colors.shadow, timeStr)
         local cx = math.floor((w - cw) / 2)
         local cy = math.floor(layout.clockCenterY - (ch / 2))
         if cy < layout.topBarH then
@@ -675,8 +750,8 @@ function _drawOnScreen(self, surf)
 
     if layout.hasBottom and layout.bottomBandY then
         local bandY = layout.bottomBandY
-        surf:filledRectangle(0, bandY, w - 1, h - 1, rgba(4, 6, 10, 140))
-        surf:filledRectangle(layout.dividerInset, bandY, w - 1 - layout.dividerInset, bandY + layout.dividerH - 1, COLOR_DIVIDER)
+        surf:filledRectangle(0, bandY, w - 1, h - 1, colors.band)
+        surf:filledRectangle(layout.dividerInset, bandY, w - 1 - layout.dividerInset, bandY + layout.dividerH - 1, colors.divider)
 
         local areaTop    = bandY + layout.areaPad
         local areaHeight = h - areaTop - layout.areaPad
@@ -692,7 +767,8 @@ function _drawOnScreen(self, surf)
 
         local count = #state.sensors
         if count > 0 then
-            local labelFont = self:_getFont("fonts/FreeSans.ttf", layout.labelFontSize)
+            local labelFontPath = state.labelBold and "fonts/FreeSansBold.ttf" or "fonts/FreeSans.ttf"
+            local labelFont = self:_getFont(labelFontPath, layout.labelFontSize)
             local valueFont = self:_getFont("fonts/FreeSansBold.ttf", layout.valueFontSize)
             local unitFont  = self:_getFont("fonts/FreeSans.ttf", layout.unitFontSize)
 
@@ -701,7 +777,7 @@ function _drawOnScreen(self, surf)
                     local cellCount = math.min(count, #layout.cells)
                     for i = 1, cellCount do
                         local c = layout.cells[i]
-                        self:_drawSensorCell(surf, state.sensors[i], c.x, c.y, c.w, c.h, c.align, labelFont, valueFont, unitFont, layout)
+                        self:_drawSensorCell(surf, state.sensors[i], c.x, c.y, c.w, c.h, c.align, labelFont, valueFont, unitFont, layout, colors)
                     end
                 else
                     local sidePad = layout.sidePad
@@ -710,30 +786,30 @@ function _drawOnScreen(self, surf)
                     local rightX = w - sidePad - sideW
 
                     if count == 1 then
-                        self:_drawSensorCell(surf, state.sensors[1], leftX, areaTop, sideW, areaHeight, "left", labelFont, valueFont, unitFont, layout)
+                        self:_drawSensorCell(surf, state.sensors[1], leftX, areaTop, sideW, areaHeight, "left", labelFont, valueFont, unitFont, layout, colors)
                     elseif count == 2 then
-                        self:_drawSensorCell(surf, state.sensors[1], leftX, areaTop, sideW, areaHeight, "left", labelFont, valueFont, unitFont, layout)
-                        self:_drawSensorCell(surf, state.sensors[2], rightX, areaTop, sideW, areaHeight, "right", labelFont, valueFont, unitFont, layout)
+                        self:_drawSensorCell(surf, state.sensors[1], leftX, areaTop, sideW, areaHeight, "left", labelFont, valueFont, unitFont, layout, colors)
+                        self:_drawSensorCell(surf, state.sensors[2], rightX, areaTop, sideW, areaHeight, "right", labelFont, valueFont, unitFont, layout, colors)
                     elseif layout.sensorRows == 1 then
                         local colGap = math.max(4, math.floor(sidePad / 2))
                         local subW = math.floor((sideW - colGap) / 2)
-                        self:_drawSensorCell(surf, state.sensors[1], leftX,                 areaTop, subW, areaHeight, "left",   labelFont, valueFont, unitFont, layout)
-                        self:_drawSensorCell(surf, state.sensors[2], leftX + subW + colGap, areaTop, subW, areaHeight, "center", labelFont, valueFont, unitFont, layout)
+                        self:_drawSensorCell(surf, state.sensors[1], leftX,                 areaTop, subW, areaHeight, "left",   labelFont, valueFont, unitFont, layout, colors)
+                        self:_drawSensorCell(surf, state.sensors[2], leftX + subW + colGap, areaTop, subW, areaHeight, "center", labelFont, valueFont, unitFont, layout, colors)
                         if count == 3 then
-                            self:_drawSensorCell(surf, state.sensors[3], rightX, areaTop, sideW, areaHeight, "right", labelFont, valueFont, unitFont, layout)
+                            self:_drawSensorCell(surf, state.sensors[3], rightX, areaTop, sideW, areaHeight, "right", labelFont, valueFont, unitFont, layout, colors)
                         else
-                            self:_drawSensorCell(surf, state.sensors[3], rightX,                 areaTop, subW, areaHeight, "center", labelFont, valueFont, unitFont, layout)
-                            self:_drawSensorCell(surf, state.sensors[4], rightX + subW + colGap, areaTop, subW, areaHeight, "right",  labelFont, valueFont, unitFont, layout)
+                            self:_drawSensorCell(surf, state.sensors[3], rightX,                 areaTop, subW, areaHeight, "center", labelFont, valueFont, unitFont, layout, colors)
+                            self:_drawSensorCell(surf, state.sensors[4], rightX + subW + colGap, areaTop, subW, areaHeight, "right",  labelFont, valueFont, unitFont, layout, colors)
                         end
                     else
                         local rowH = math.floor(areaHeight / 2)
-                        self:_drawSensorCell(surf, state.sensors[1], leftX,  areaTop,        sideW, rowH, "left",  labelFont, valueFont, unitFont, layout)
-                        self:_drawSensorCell(surf, state.sensors[2], rightX, areaTop,        sideW, rowH, "right", labelFont, valueFont, unitFont, layout)
+                        self:_drawSensorCell(surf, state.sensors[1], leftX,  areaTop,        sideW, rowH, "left",  labelFont, valueFont, unitFont, layout, colors)
+                        self:_drawSensorCell(surf, state.sensors[2], rightX, areaTop,        sideW, rowH, "right", labelFont, valueFont, unitFont, layout, colors)
                         if state.sensors[3] then
-                            self:_drawSensorCell(surf, state.sensors[3], leftX,  areaTop + rowH, sideW, rowH, "left",  labelFont, valueFont, unitFont, layout)
+                            self:_drawSensorCell(surf, state.sensors[3], leftX,  areaTop + rowH, sideW, rowH, "left",  labelFont, valueFont, unitFont, layout, colors)
                         end
                         if state.sensors[4] then
-                            self:_drawSensorCell(surf, state.sensors[4], rightX, areaTop + rowH, sideW, rowH, "right", labelFont, valueFont, unitFont, layout)
+                            self:_drawSensorCell(surf, state.sensors[4], rightX, areaTop + rowH, sideW, rowH, "right", labelFont, valueFont, unitFont, layout, colors)
                         end
                     end
                 end

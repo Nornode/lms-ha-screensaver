@@ -43,10 +43,20 @@ sub _trim {
 
 sub _buildDefaultsHash {
     my %defaults = (
-        font_name      => Plugins::HAScreenSaver::Plugin::sanitizeFontName($prefs->get('font_name')),
-        weather_entity => _trim($prefs->get('weather_entity')),
-        alert_entity   => _trim($prefs->get('alert_entity')),
-        alert_label    => _trim($prefs->get('alert_label')),
+        font_name        => Plugins::HAScreenSaver::Plugin::sanitizeFontName($prefs->get('font_name')),
+        background_style => Plugins::HAScreenSaver::Plugin::sanitizeBackgroundStyle($prefs->get('background_style')),
+        weather_size     => Plugins::HAScreenSaver::Plugin::sanitizeWeatherSize($prefs->get('weather_size')),
+        label_size       => Plugins::HAScreenSaver::Plugin::sanitizeLabelSize($prefs->get('label_size')),
+        label_bold       => Plugins::HAScreenSaver::Plugin::sanitizeBoolFlag($prefs->get('label_bold')),
+        value_size       => Plugins::HAScreenSaver::Plugin::sanitizeScaleSize($prefs->get('value_size')),
+        clock_size       => Plugins::HAScreenSaver::Plugin::sanitizeScaleSize($prefs->get('clock_size')),
+        clock_color      => Plugins::HAScreenSaver::Plugin::sanitizeHexColor($prefs->get('clock_color')),
+        value_color      => Plugins::HAScreenSaver::Plugin::sanitizeHexColor($prefs->get('value_color')),
+        label_color      => Plugins::HAScreenSaver::Plugin::sanitizeHexColor($prefs->get('label_color')),
+        unit_color       => Plugins::HAScreenSaver::Plugin::sanitizeHexColor($prefs->get('unit_color')),
+        weather_entity   => _trim($prefs->get('weather_entity')),
+        alert_entity     => _trim($prefs->get('alert_entity')),
+        alert_label      => _trim($prefs->get('alert_label')),
     );
 
     for my $i (1 .. 4) {
@@ -89,6 +99,37 @@ sub handler {
                 if (defined $params->{pref_player_font_name} && $params->{pref_player_font_name} ne '') {
                     $params->{pref_player_font_name} =
                         Plugins::HAScreenSaver::Plugin::sanitizeFontName($params->{pref_player_font_name});
+                }
+                if (defined $params->{pref_player_background_style} && $params->{pref_player_background_style} ne '') {
+                    $params->{pref_player_background_style} =
+                        Plugins::HAScreenSaver::Plugin::sanitizeBackgroundStyle($params->{pref_player_background_style});
+                }
+                if (defined $params->{pref_player_weather_size} && $params->{pref_player_weather_size} ne '') {
+                    $params->{pref_player_weather_size} =
+                        Plugins::HAScreenSaver::Plugin::sanitizeWeatherSize($params->{pref_player_weather_size});
+                }
+                if (defined $params->{pref_player_label_size} && $params->{pref_player_label_size} ne '') {
+                    $params->{pref_player_label_size} =
+                        Plugins::HAScreenSaver::Plugin::sanitizeLabelSize($params->{pref_player_label_size});
+                }
+                if (defined $params->{pref_player_label_bold} && $params->{pref_player_label_bold} ne '') {
+                    $params->{pref_player_label_bold} =
+                        Plugins::HAScreenSaver::Plugin::sanitizeBoolFlag($params->{pref_player_label_bold});
+                }
+                if (defined $params->{pref_player_value_size} && $params->{pref_player_value_size} ne '') {
+                    $params->{pref_player_value_size} =
+                        Plugins::HAScreenSaver::Plugin::sanitizeScaleSize($params->{pref_player_value_size});
+                }
+                if (defined $params->{pref_player_clock_size} && $params->{pref_player_clock_size} ne '') {
+                    $params->{pref_player_clock_size} =
+                        Plugins::HAScreenSaver::Plugin::sanitizeScaleSize($params->{pref_player_clock_size});
+                }
+                for my $ckey (qw(clock_color value_color label_color unit_color)) {
+                    my $pk = "pref_player_$ckey";
+                    if (defined $params->{$pk}) {
+                        $params->{$pk} =
+                            Plugins::HAScreenSaver::Plugin::sanitizeHexColor($params->{$pk});
+                    }
                 }
             }
 
