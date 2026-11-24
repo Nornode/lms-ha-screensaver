@@ -45,4 +45,11 @@ perl -e '
     print "    OK: Settings.pm and PlayerSettings.pm compile cleanly\n";
 '
 
+echo "==> 6. Checking strings.txt files for CRLF line endings..."
+if grep -l $'\r' server-plugin/HAScreenSaver/strings.txt radio-applet/HAScreenSaver/strings.txt; then
+    echo "ERROR: Found CR/CRLF line endings in strings.txt (must use Unix LF)" >&2
+    exit 1
+fi
+echo "    OK: strings.txt files use Unix LF"
+
 echo "==> All local tests passed!"

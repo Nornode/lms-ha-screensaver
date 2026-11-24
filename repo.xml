@@ -4,11 +4,11 @@
     <title lang="EN">Home Assistant Screensaver for Lyrion Music Server</title>
   </details>
   <plugins>
-    <plugin name="HAScreenSaver" version="2.0.0" minTarget="8.0" maxTarget="*" icon="https://raw.githubusercontent.com/Nornode/lms-ha-screensaver/main/server-plugin/HAScreenSaver/HTML/EN/plugins/HAScreenSaver/html/images/icon.png">
+    <plugin name="HAScreenSaver" version="2.0.1" minTarget="8.0" maxTarget="*" icon="https://raw.githubusercontent.com/Nornode/lms-ha-screensaver/main/server-plugin/HAScreenSaver/HTML/EN/plugins/HAScreenSaver/html/images/icon.png">
       <title lang="EN">Home Assistant Screensaver</title>
       <desc lang="EN">Stateless live proxy serving Home Assistant sensor states, weather condition, door/alert status, and radio alarm status to the Home Assistant Clock screensaver applet on Squeezebox Radio, Squeezebox Controller, Squeezebox Touch, and Jivelite, with zero long-term caching. Automatically serves the applet over plain local HTTP to Applet Installer.</desc>
-      <url>https://github.com/Nornode/lms-ha-screensaver/releases/download/v2.0.0/HAScreenSaver-plugin-v2.0.0.zip</url>
-      <sha>7eefb1b10c11e649f9f9b3cdfaa7655d6a641f82</sha>
+      <url>https://github.com/Nornode/lms-ha-screensaver/releases/download/v2.0.1/HAScreenSaver-plugin-v2.0.1.zip</url>
+      <sha>9ad4fb16cb77de62cb7e07925abc93504401276b</sha>
       <creator>Nornode</creator>
       <link>https://github.com/Nornode/lms-ha-screensaver</link>
       <category>misc</category>
